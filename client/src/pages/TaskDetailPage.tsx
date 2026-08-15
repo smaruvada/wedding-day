@@ -195,19 +195,20 @@ export function TaskDetailPage() {
         {user.role === "host" && (
           <Group gap="xs" wrap="nowrap">
             <Button
+              color="light"
+              onClick={() => setDeleteConfirmationOpen(true)}
+              aria-label="Delete task"
+              title="Delete task"
+            >
+              🗑
+            </Button>
+            <Button
               component={Link}
               to={`/host/tasks/${task.id}/edit`}
               aria-label="Edit task"
               title="Edit task"
             >
               ✎
-            </Button>
-            <Button
-              color="red"
-              variant="light"
-              onClick={() => setDeleteConfirmationOpen(true)}
-            >
-              Delete
             </Button>
           </Group>
         )}
