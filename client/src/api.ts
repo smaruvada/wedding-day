@@ -49,10 +49,15 @@ export const taskApi = {
     data<{
       task: Task;
     }>(api.post("/tasks", payload)),
+  import: (titles: string[]) =>
+    data<{
+      tasks: Task[];
+    }>(api.post("/tasks/import", { titles })),
   update: (taskId: number, payload: object) =>
     data<{
       task: Task;
     }>(api.patch(`/tasks/${taskId}`, payload)),
+  remove: (taskId: number) => data<void>(api.delete(`/tasks/${taskId}`)),
   complete: (taskId: number, subtaskId: number) =>
     data<{
       task: Task;

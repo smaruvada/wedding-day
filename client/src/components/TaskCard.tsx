@@ -10,7 +10,7 @@ export function TaskCard({ task, host = false }: { task: Task; host?: boolean })
         <div className="task-card-content">
           <Text fw={600}>{task.title}</Text>
           <Text size="sm" c="dimmed">
-            {task.assignee?.name ?? `${task.subtasks.filter((subtask) => subtask.completedAt).length}/${task.subtasks.length} steps completed`}
+            {task.assignee?.name ?? (task.assignedToUserId ? `${task.subtasks.filter((subtask) => subtask.completedAt).length}/${task.subtasks.length} steps completed` : "Unassigned")}
           </Text>
         </div>
         <Group wrap="nowrap" className="task-card-badges">

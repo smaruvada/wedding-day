@@ -60,7 +60,6 @@ export const tasks = pgTable("tasks", {
   title: text("title").notNull(),
   description: text("description"),
   assignedToUserId: integer("assigned_to_user_id")
-    .notNull()
     .references(() => users.id),
   hostCreatedByUserId: integer("host_created_by_user_id")
     .notNull()

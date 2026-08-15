@@ -33,7 +33,7 @@ export interface Task {
   id: number;
   title: string;
   description: string | null;
-  assignedToUserId: number;
+  assignedToUserId: number | null;
   urgency: Urgency;
   status: "open" | "completed";
   photoRequired: boolean;

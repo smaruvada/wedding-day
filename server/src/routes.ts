@@ -52,11 +52,13 @@ async function hydrateTask(task: typeof tasks.$inferSelect) {
         .from(taskPhotos)
         .where(eq(taskPhotos.taskId, task.id))
         .orderBy(desc(taskPhotos.createdAt)),
-      db
-        .select({ id: users.id, name: users.name, email: users.email })
-        .from(users)
-        .where(eq(users.id, task.assignedToUserId))
-        .limit(1),
+      task.assignedToUserId === null
+        ? Promise.resolve([])
+        : db
+            .select({ id: users.id, name: users.name, email: users.email })
+            .from(users)
+            .where(eq(users.id, task.assignedToUserId))
+            .limit(1),
       db
         .select()
         .from(questions)
@@ -224,6 +226,30 @@ taskRouter.post("/", requireRole("host"), async (req, res) => {
     fail(res, error);
   }
 });
+taskRouter.post("/import", requireRole("host"), async (req, res) => {
+  try {
+    const input = z
+      .object({
+        titles: z.array(z.string().trim().min(1).max(500)).min(1).max(100),
+      })
+      .parse(req.body);
+    const createdTasks = await db.transaction(async (transaction) =>
+      transaction
+        .insert(tasks)
+        .values(
+          input.titles.map((title) => ({
+            title,
+            eventId: req.user!.eventId,
+            hostCreatedByUserId: req.user!.id,
+          })),
+        )
+        .returning(),
+    );
+    res.status(201).json({ tasks: await Promise.all(createdTasks.map(hydrateTask)) });
+  } catch (error) {
+    fail(res, error);
+  }
+});
 taskRouter.get("/", async (req, res) => {
   const where =
     req.user!.role === "host"
@@ -317,6 +343,27 @@ taskRouter.patch("/:taskId", requireRole("host"), async (req, res) => {
     await refreshStatus(updated);
     const [fresh] = await db.select().from(tasks).where(eq(tasks.id, task.id));
     res.json({ task: await hydrateTask(fresh) });
+  } catch (error) {
+    fail(res, error);
+  }
+});
+taskRouter.delete("/:taskId", requireRole("host"), async (req, res) => {
+  try {
+    const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    const photos = await db
+      .select({ filePath: taskPhotos.filePath })
+      .from(taskPhotos)
+      .where(eq(taskPhotos.taskId, task.id));
+    await db.transaction(async (transaction) => {
+      await transaction
+        .update(questions)
+        .set({ taskId: null, updatedAt: new Date() })
+        .where(eq(questions.taskId, task.id));
+      await transaction.delete(tasks).where(eq(tasks.id, task.id));
+    });
+    await Promise.allSettled(photos.map((photo) => storage.remove(photo.filePath)));
+    res.status(204).send();
   } catch (error) {
     fail(res, error);
   }

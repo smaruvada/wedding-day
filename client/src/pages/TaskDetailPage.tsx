@@ -1,7 +1,7 @@
-import { Alert, Badge, Button, Card, Checkbox, Group, Modal, Stack, Text, Textarea, Title } from "@mantine/core";
+import { Alert, Badge, Button, Card, Checkbox, Group, Modal, Select, Stack, Text, Textarea, Title } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { questionApi, taskApi } from "../api";
 import { ErrorBox, Loading } from "../components/feedback";
 import { Layout } from "../components/Layout";
@@ -13,6 +13,7 @@ import { useAuthStore } from "../store";
 
 export function TaskDetailPage() {
   const { taskId = "" } = useParams();
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user)!;
   const client = useQueryClient();
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(
@@ -22,9 +23,15 @@ export function TaskDetailPage() {
     null,
   );
   const [answerText, setAnswerText] = useState("");
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const query = useQuery({
     queryKey: ["task", taskId],
     queryFn: () => taskApi.get(taskId),
+  });
+  const members = useQuery({
+    queryKey: ["members"],
+    queryFn: taskApi.members,
+    enabled: user.role === "host",
   });
   const complete = useMutation({
     mutationFn: (subtaskId: number) =>
@@ -40,6 +47,21 @@ export function TaskDetailPage() {
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["task", taskId] });
       client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+  const assignmentMutation = useMutation({
+    mutationFn: (assignedToUserId: number) =>
+      taskApi.redelegate(Number(taskId), assignedToUserId),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["task", taskId] });
+      client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: () => taskApi.remove(Number(taskId)),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["tasks"] });
+      navigate("/host/tasks");
     },
   });
   const resolveQuestion = useMutation({
@@ -171,19 +193,45 @@ export function TaskDetailPage() {
           <Title>{task.title}</Title>
         </Group>
         {user.role === "host" && (
-          <Button
-            component={Link}
-            to={`/host/tasks/${task.id}/edit`}
-            aria-label="Edit task"
-            title="Edit task"
-          >
-            ✎
-          </Button>
+          <Group gap="xs" wrap="nowrap">
+            <Button
+              component={Link}
+              to={`/host/tasks/${task.id}/edit`}
+              aria-label="Edit task"
+              title="Edit task"
+            >
+              ✎
+            </Button>
+            <Button
+              color="red"
+              variant="light"
+              onClick={() => setDeleteConfirmationOpen(true)}
+            >
+              Delete
+            </Button>
+          </Group>
         )}
       </Group>
       <Badge color={task.status === "completed" ? "green" : "gray"}>
         {task.status}
       </Badge>
+      {user.role === "host" && (
+        <Select
+          mt="md"
+          label="Assign to"
+          placeholder="Choose a member"
+          value={task.assignedToUserId ? String(task.assignedToUserId) : null}
+          data={(members.data?.users ?? []).map((member) => ({
+            value: String(member.id),
+            label: member.name,
+          }))}
+          disabled={assignmentMutation.isPending}
+          onChange={(value) => {
+            if (value) assignmentMutation.mutate(Number(value));
+          }}
+        />
+      )}
+      {assignmentMutation.error && <ErrorBox error={assignmentMutation.error} />}
       <Text c="dimmed" my="md">
         {task.description}
       </Text>
@@ -200,6 +248,24 @@ export function TaskDetailPage() {
           {questionsSection}
         </>
       )}
+      <Modal
+        opened={deleteConfirmationOpen}
+        onClose={() => setDeleteConfirmationOpen(false)}
+        title="Delete task?"
+      >
+        <Stack>
+          <Text>This permanently deletes the task and its completion photos.</Text>
+          {deleteMutation.error && <ErrorBox error={deleteMutation.error} />}
+          <Group justify="flex-end">
+            <Button variant="light" onClick={() => setDeleteConfirmationOpen(false)}>
+              Cancel
+            </Button>
+            <Button color="red" loading={deleteMutation.isPending} onClick={() => deleteMutation.mutate()}>
+              Delete task
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
       <Modal
         opened={!!selectedQuestion}
         onClose={() => setSelectedQuestionId(null)}
