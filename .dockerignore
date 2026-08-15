@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+.env
+server/.env
+uploads
+server/uploads
+coverage
+.git
+.DS_Store
+npm-debug.log

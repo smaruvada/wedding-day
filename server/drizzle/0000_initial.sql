@@ -1,0 +1,13 @@
+CREATE TYPE "role" AS ENUM ('member', 'host');
+CREATE TYPE "host_type" AS ENUM ('bride', 'maid_of_honor', 'planner', 'other');
+CREATE TYPE "urgency" AS ENUM ('low', 'medium', 'high', 'urgent');
+CREATE TYPE "task_status" AS ENUM ('open', 'completed');
+CREATE TYPE "question_status" AS ENUM ('open', 'answered', 'resolved');
+CREATE TABLE "events" ("id" serial PRIMARY KEY NOT NULL, "name" text NOT NULL, "created_at" timestamp with time zone DEFAULT now() NOT NULL);
+CREATE TABLE "users" ("id" serial PRIMARY KEY NOT NULL, "email" text NOT NULL, "password_hash" text NOT NULL, "name" text NOT NULL, "role" "role" NOT NULL, "host_type" "host_type", "event_id" integer NOT NULL REFERENCES "events"("id"), "created_at" timestamp with time zone DEFAULT now() NOT NULL);
+CREATE UNIQUE INDEX "users_email_unique" ON "users" USING btree ("email");
+CREATE TABLE "tasks" ("id" serial PRIMARY KEY NOT NULL, "event_id" integer NOT NULL REFERENCES "events"("id"), "title" text NOT NULL, "description" text, "assigned_to_user_id" integer NOT NULL REFERENCES "users"("id"), "host_created_by_user_id" integer NOT NULL REFERENCES "users"("id"), "urgency" "urgency" DEFAULT 'low' NOT NULL, "status" "task_status" DEFAULT 'open' NOT NULL, "photo_required" boolean DEFAULT false NOT NULL, "created_at" timestamp with time zone DEFAULT now() NOT NULL, "updated_at" timestamp with time zone DEFAULT now() NOT NULL);
+CREATE TABLE "subtasks" ("id" serial PRIMARY KEY NOT NULL, "task_id" integer NOT NULL REFERENCES "tasks"("id") ON DELETE cascade, "title" text NOT NULL, "sort_order" integer NOT NULL, "completed_by_user_id" integer REFERENCES "users"("id"), "completed_at" timestamp with time zone);
+CREATE TABLE "task_photos" ("id" serial PRIMARY KEY NOT NULL, "task_id" integer NOT NULL REFERENCES "tasks"("id") ON DELETE cascade, "uploaded_by_user_id" integer NOT NULL REFERENCES "users"("id"), "file_path" text NOT NULL, "created_at" timestamp with time zone DEFAULT now() NOT NULL);
+CREATE TABLE "questions" ("id" serial PRIMARY KEY NOT NULL, "event_id" integer NOT NULL REFERENCES "events"("id"), "asked_by_user_id" integer NOT NULL REFERENCES "users"("id"), "task_id" integer REFERENCES "tasks"("id"), "content" text NOT NULL, "urgency" "urgency" DEFAULT 'low' NOT NULL, "status" "question_status" DEFAULT 'open' NOT NULL, "answer_text" text, "created_at" timestamp with time zone DEFAULT now() NOT NULL, "updated_at" timestamp with time zone DEFAULT now() NOT NULL);
+CREATE TABLE "question_photos" ("id" serial PRIMARY KEY NOT NULL, "question_id" integer NOT NULL REFERENCES "questions"("id") ON DELETE cascade, "uploaded_by_user_id" integer NOT NULL REFERENCES "users"("id"), "file_path" text NOT NULL, "created_at" timestamp with time zone DEFAULT now() NOT NULL);
