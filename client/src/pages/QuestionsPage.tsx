@@ -54,13 +54,13 @@ export function QuestionCard({
           <Text fw={600}>{question.content}</Text>
           <Group>
             <QuestionUrgencyBadge question={question} isHost={isHost} onChange={(urgency) => onUrgencyChange(question.id, urgency)} />
-            <Button variant="subtle" size="xs" disabled={!question.taskId} onClick={(event) => { event.stopPropagation(); setShowTask((current) => !current); }}>{showTask ? "‹" : "›"}</Button>
             {onDelete && <Button color="red" variant="subtle" size="xs" onClick={(event) => { event.stopPropagation(); onDelete(); }}>×</Button>}
           </Group>
         </Group>
         {question.answerText && <Alert mt="sm" color="blue">{question.answerText}</Alert>}
         <QuestionPhotos photos={question.photos} />
         {isHost && <Stack mt="md"><Textarea value={answerText} onChange={(event) => setAnswerText(event.currentTarget.value)} placeholder="Write an answer" /><Button onClick={() => onStatusChange(question.id, "resolved", answerText)} disabled={!answerText.trim()}>Answer</Button></Stack>}
+        {question.taskId && <Group justify="center" mt="sm"><Button variant="subtle" size="xs" aria-label={showTask ? "Collapse related task" : "Expand related task"} onClick={(event) => { event.stopPropagation(); setShowTask((current) => !current); }}>{showTask ? "↑" : "↓"}</Button></Group>}
         <Modal opened={editing} onClose={() => setEditing(false)} onClick={(event) => event.stopPropagation()} title="Edit question"><Stack><Textarea value={content} onChange={(event) => setContent(event.currentTarget.value)} label="Question" /><Group justify="flex-end"><Button variant="light" onClick={() => setEditing(false)}>Cancel</Button><Button onClick={() => { if (content.trim()) { onEdit?.(content.trim()); setEditing(false); } }} disabled={!content.trim()}>Save</Button></Group></Stack></Modal>
         {showTask && relatedTask.data && <div className="related-task-panel"><Title order={3}>Related task</Title><Text fw={600}>{relatedTask.data.task.title}</Text><Text size="sm" c="dimmed">{relatedTask.data.task.description}</Text><Button component={Link} to={`/tasks/${question.taskId}`} variant="light" size="xs">Open full task</Button></div>}
         {showTask && relatedTask.isLoading && <Loading />}
