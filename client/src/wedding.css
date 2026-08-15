@@ -134,6 +134,10 @@ body {
   text-decoration: none;
 }
 
+.brand-mobile {
+  display: none;
+}
+
 .subtask-input {
   flex: 1;
 }
@@ -181,22 +185,30 @@ a {
   }
 
   .app-header-content {
-    align-content: center;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
     flex-wrap: nowrap;
-    gap: 0;
-    justify-content: center;
-    padding-block: 0.25rem;
+    gap: 0.25rem;
+    justify-content: space-between;
   }
 
   .app-primary-nav {
+    flex: 1;
     gap: 0.25rem;
-    justify-content: center;
-    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
   }
 
-  .app-primary-nav .mantine-Title-root {
-    font-size: 1rem;
+  .brand-link {
+    flex-shrink: 0;
+  }
+
+  .brand-full {
+    display: none;
+  }
+
+  .brand-mobile {
+    display: inline;
   }
 
   .app-primary-nav .mantine-Button-root,
@@ -206,7 +218,10 @@ a {
   }
 
   .account-menu-button {
-    align-self: flex-end;
+    max-width: 7.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .mantine-Card-root,

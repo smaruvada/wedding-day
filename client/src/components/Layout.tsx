@@ -19,12 +19,15 @@ export function Layout({ children }: { children: ReactNode }) {
   const openQuestionCount = questions.data?.questions.length ?? 0;
 
   return (
-    <AppShell header={{ height: { base: 112, sm: 62 } }} padding="md">
+    <AppShell header={{ height: 62 }} padding="md">
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between" className="app-header-content">
           <Group className="app-primary-nav">
             <Link className="brand-link" to={taskPath}>
-              <Title order={3}>Wedding Day</Title>
+              <Title order={3}>
+                <span className="brand-full">Wedding Day</span>
+                <span className="brand-mobile">W</span>
+              </Title>
             </Link>
             <Button component={Link} to={taskPath} variant="subtle">Tasks</Button>
             <Button component={Link} to={user.role === "host" ? "/host/questions" : "/me/questions"} variant="subtle">
