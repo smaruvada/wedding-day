@@ -812,6 +812,12 @@ adminRouter.patch("/users/:userId", async (req, res) => {
       .where(eq(users.id, Number(req.params.userId)))
       .limit(1);
     if (!existing) return res.status(404).json({ error: "User not found" });
+    if (
+      existing.id === req.user!.id &&
+      input.role !== undefined &&
+      input.role !== existing.role
+    )
+      return res.status(403).json({ error: "You cannot change your own role" });
     const role = input.role ?? existing.role;
     const [user] = await db
       .update(users)
