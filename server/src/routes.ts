@@ -231,27 +231,29 @@ taskRouter.post("/", requireRole(...hostRoles), async (req, res) => {
       .object({
         title: z.string().min(1),
         description: z.string().optional(),
-        assignedToUserId: z.number().int(),
+        assignedToUserId: z.number().int().nullable(),
         urgency,
         photoRequired: z.boolean().default(false),
         subtasks: z.array(z.object({ title: z.string().min(1) })),
       })
       .parse(req.body);
-    const [assignee] = await db
-      .select()
-      .from(users)
-      .where(
-        and(
-          eq(users.id, input.assignedToUserId),
-          eq(users.eventId, req.user!.eventId),
-          inArray(users.role, ["member", "host"]),
-        ),
-      )
-      .limit(1);
-    if (!assignee)
-      return res
-        .status(400)
-        .json({ error: "Assignee must be an event member" });
+    if (input.assignedToUserId !== null) {
+      const [assignee] = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.id, input.assignedToUserId),
+            eq(users.eventId, req.user!.eventId),
+            inArray(users.role, ["member", "host"]),
+          ),
+        )
+        .limit(1);
+      if (!assignee)
+        return res
+          .status(400)
+          .json({ error: "Assignee must be an event member" });
+    }
     const [task] = await db
       .insert(tasks)
       .values({

@@ -23,7 +23,10 @@ export function TaskFormPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const description = String(form.get("description") ?? "").trim();
-    const assignedToUserId = Number(form.get("assignedToUserId"));
+    const assignedToUserIdValue = form.get("assignedToUserId");
+    const assignedToUserId = assignedToUserIdValue
+      ? Number(assignedToUserIdValue)
+      : null;
     const taskSubtasks = subtasks
       .map(({ id, title }) => ({ id, title: title.trim() }))
       .filter((subtask) => subtask.title);
@@ -61,9 +64,10 @@ export function TaskFormPage() {
             data={["low", "medium", "high", "urgent"]}
           />
           <Select
-            required
             name="assignedToUserId"
             label="Assign to"
+            placeholder="Unassigned"
+            clearable
             data={(members.data?.users ?? []).map((member) => ({
               value: String(member.id),
               label: member.name,
