@@ -373,6 +373,11 @@ export function TaskDetailPage() {
               </Menu.Dropdown>
             </Menu>
           )}
+          {!isHost && (
+            <Badge color={urgencyColors[task.urgency]}>
+              {task.urgency}
+            </Badge>
+          )}
         </Group>
         {memberCompletionControl}
       </Group>
