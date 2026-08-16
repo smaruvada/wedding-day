@@ -52,10 +52,12 @@ export function AdminUsersPage() {
   return <Layout>
     <Group justify="space-between" mb="lg"><Title>Users</Title><Button onClick={() => setEditing(null)}>Create user</Button></Group>
     <Text size="sm" c="dimmed" mb="md">Manage every user account and its attributes. Passwords are never displayed; set a new one to reset it.</Text>
-    <Table striped highlightOnHover withTableBorder>
-      <Table.Thead><Table.Tr><Table.Th>ID</Table.Th><Table.Th>Name</Table.Th><Table.Th>Email / username</Table.Th><Table.Th>Role</Table.Th><Table.Th>Role type</Table.Th><Table.Th>Event</Table.Th><Table.Th>Created</Table.Th><Table.Th /></Table.Tr></Table.Thead>
-      <Table.Tbody>{users.map((user) => <Table.Tr key={user.id}><Table.Td>{user.id}</Table.Td><Table.Td>{user.name}</Table.Td><Table.Td>{user.email}</Table.Td><Table.Td>{user.role}</Table.Td><Table.Td>{user.roleType ?? "—"}</Table.Td><Table.Td>{user.eventId}</Table.Td><Table.Td>{new Date(user.createdAt).toLocaleDateString()}</Table.Td><Table.Td><Button size="xs" variant="light" onClick={() => setEditing(user)}>Edit</Button></Table.Td></Table.Tr>)}</Table.Tbody>
-    </Table>
+    <Table.ScrollContainer minWidth={820} type="native">
+      <Table striped highlightOnHover withTableBorder>
+        <Table.Thead><Table.Tr><Table.Th>ID</Table.Th><Table.Th>Name</Table.Th><Table.Th>Email / username</Table.Th><Table.Th>Role</Table.Th><Table.Th>Role type</Table.Th><Table.Th>Event</Table.Th><Table.Th>Created</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+        <Table.Tbody>{users.map((user) => <Table.Tr key={user.id}><Table.Td>{user.id}</Table.Td><Table.Td>{user.name}</Table.Td><Table.Td>{user.email}</Table.Td><Table.Td>{user.role}</Table.Td><Table.Td>{user.roleType ?? "—"}</Table.Td><Table.Td>{user.eventId}</Table.Td><Table.Td>{new Date(user.createdAt).toLocaleDateString()}</Table.Td><Table.Td><Button size="xs" variant="light" onClick={() => setEditing(user)}>Edit</Button></Table.Td></Table.Tr>)}</Table.Tbody>
+      </Table>
+    </Table.ScrollContainer>
     <Modal opened={editing !== undefined} onClose={() => setEditing(undefined)} title={editing ? `Edit ${editing.name}` : "Create user"}>
       <UserForm user={editing ?? undefined} canChangeRole={!editing || editing.id !== currentUser.id} onClose={() => setEditing(undefined)} />
     </Modal>
