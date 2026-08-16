@@ -1,4 +1,5 @@
 import { Alert, Badge, Button, Card, Checkbox, Group, Menu, Modal, Select, Stack, Text, Textarea, TextInput, Title } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -332,12 +333,13 @@ export function TaskDetailPage() {
         {isHost && (
           <Group gap="xs" wrap="nowrap">
             <Button
-              color="light"
+              color="rose"
+              variant="subtle"
               onClick={() => setDeleteConfirmationOpen(true)}
               aria-label="Delete task"
               title="Delete task"
             >
-              🗑
+              <IconTrash size={16} stroke={1.8} />
             </Button>
           </Group>
         )}
