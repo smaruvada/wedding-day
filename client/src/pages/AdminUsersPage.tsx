@@ -50,7 +50,7 @@ export function AdminUsersPage() {
   if (query.error) return <Layout><ErrorBox error={query.error} /></Layout>;
   const users = query.data?.users ?? [];
   return <Layout>
-    <Group justify="space-between" mb="lg"><Title>Users</Title><Button onClick={() => setEditing(null)}>Create user</Button></Group>
+    <Group justify="space-between" mb="lg"><Title>Users</Title><Button onClick={() => setEditing(null)}>+</Button></Group>
     <Text size="sm" c="dimmed" mb="md">Manage every user account and its attributes. Passwords are never displayed; set a new one to reset it.</Text>
     <Table.ScrollContainer minWidth={820} type="native">
       <Table striped highlightOnHover withTableBorder>
