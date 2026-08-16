@@ -2,7 +2,7 @@
   "name": "@wedding-day/client",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "vite --host", "build": "tsc -b && vite build" },
+  "scripts": { "dev": "vite", "build": "tsc -b && vite build" },
   "dependencies": { "@mantine/core": "^7.15.1", "@mantine/hooks": "^7.15.1", "@tabler/icons-react": "^3.26.0", "@tanstack/react-query": "^5.62.7", "axios": "^1.7.9", "react": "^18.3.1", "react-dom": "^18.3.1", "react-router-dom": "^7.1.1", "xlsx": "^0.18.5", "zustand": "^5.0.2" },
   "devDependencies": { "@types/react": "^18.3.18", "@types/react-dom": "^18.3.5", "@vitejs/plugin-react": "^4.3.4", "typescript": "^5.7.2", "vite": "^6.0.5" }
 }
