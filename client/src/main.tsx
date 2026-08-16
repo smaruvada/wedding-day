@@ -109,6 +109,7 @@ function AuthPage({ register = false }: { register?: boolean }) {
               name="password"
               label="Password"
               minLength={8}
+              description={register ? "At least 8 characters and one special character" : undefined}
             />
             <Button type="submit" loading={mutation.isPending}>
               {register ? "Register" : "Log in"}

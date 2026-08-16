@@ -20,6 +20,10 @@ import { storage } from "./storage.js";
 import { AuthUser } from "./types.js";
 const urgency = z.enum(["low", "medium", "high", "urgent"]);
 const hostRoles = ["host", "admin"] as const;
+const password = z
+  .string()
+  .min(8)
+  .regex(/[^A-Za-z0-9\s]/, "Password must include a special character");
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024, files: 1 },
@@ -121,7 +125,7 @@ authRouter.post("/register", async (req, res) => {
     const input = z
       .object({
         email: z.string().email(),
-        password: z.string().min(8),
+        password,
         name: z.string().min(1),
       })
       .parse(req.body);
@@ -187,7 +191,7 @@ authRouter.patch("/me", requireAuth, async (req, res) => {
 authRouter.patch("/me/password", requireAuth, async (req, res) => {
   try {
     const input = z
-      .object({ currentPassword: z.string(), newPassword: z.string().min(8) })
+      .object({ currentPassword: z.string(), newPassword: password })
       .parse(req.body);
     const [user] = await db
       .select()
@@ -768,7 +772,7 @@ adminRouter.post("/users", async (req, res) => {
       .object({
         name: z.string().trim().min(1),
         email: z.string().trim().min(1),
-        password: z.string().min(8),
+        password,
         role: z.enum(["member", "host"]),
         hostType: hostType.optional(),
       })
@@ -797,7 +801,7 @@ adminRouter.patch("/users/:userId", async (req, res) => {
       .object({
         name: z.string().trim().min(1).optional(),
         email: z.string().trim().min(1).optional(),
-        password: z.string().min(8).optional(),
+        password: password.optional(),
         role: z.enum(["member", "host", "admin"]).optional(),
         hostType: hostType.nullable().optional(),
       })
