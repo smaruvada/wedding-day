@@ -53,6 +53,12 @@ export function SubtaskEditor({
               value={subtask.title}
               onChange={(event) => change(index, event.currentTarget.value)}
               onBlur={() => subtask.title.trim() && save(subtasks)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  if (subtask.title.trim()) save(subtasks);
+                }
+              }}
               autoFocus
               aria-label={`Subtask ${index + 1}`}
             />
