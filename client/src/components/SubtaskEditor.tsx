@@ -57,7 +57,7 @@ export function SubtaskEditor({
               aria-label={`Subtask ${index + 1}`}
             />
             <Button variant="light" onClick={() => subtask.title.trim() && save(subtasks)} disabled={!subtask.title.trim()} aria-label={`Save subtask ${index + 1}`} title="Save subtask">✓</Button>
-            <Button color="red" variant="subtle" onClick={() => save(subtasks.filter((_, subtaskIndex) => subtaskIndex !== index))} disabled={subtasks.length === 1} aria-label={`Delete subtask ${index + 1}`} title="Delete subtask">×</Button>
+            <Button color="red" variant="subtle" onMouseDown={(event) => event.preventDefault()} onClick={() => save(subtasks.filter((_, subtaskIndex) => subtaskIndex !== index))} aria-label={`Delete subtask ${index + 1}`} title="Delete subtask">×</Button>
           </Group>
         ) : (
           <Group key={subtask.id ?? `new-${index}`} gap="xs">

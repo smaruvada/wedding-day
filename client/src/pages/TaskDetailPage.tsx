@@ -43,6 +43,13 @@ export function TaskDetailPage() {
       client.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
+  const completeTask = useMutation({
+    mutationFn: () => taskApi.completeTask(Number(taskId)),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["task", taskId] });
+      client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
   const subtaskMutation = useMutation({
     mutationFn: (subtasks: EditableSubtask[]) =>
       taskApi.update(Number(taskId), { subtasks }),
@@ -95,6 +102,18 @@ export function TaskDetailPage() {
   const editingQuestion = task.relatedQuestions?.find(
     (question) => question.id === editingQuestionId,
   );
+  const memberCompletionControl = !isHost && (
+    <Checkbox
+      // label="Completed"
+      checked={task.status === "completed"}
+      disabled={
+        task.subtasks.length > 0 ||
+        completeTask.isPending ||
+        (task.photoRequired && !task.photos.length)
+      }
+      onChange={() => completeTask.mutate()}
+    />
+  );
   const openQuestion = (question: {
     id: number;
     answerText: string | null;
@@ -114,17 +133,24 @@ export function TaskDetailPage() {
         {subtaskMutation.error && <ErrorBox error={subtaskMutation.error} />}
       </Card>
     ) : (
-      <Stack mt="lg">
-        {task.subtasks.map((subtask) => (
-          <Checkbox
-            key={subtask.id}
-            label={subtask.title}
-            checked={!!subtask.completedAt}
-            disabled={complete.isPending}
-            onChange={() => complete.mutate(subtask.id)}
-          />
-        ))}
-      </Stack>
+      <>
+        {task.subtasks.length > 0 && (
+          <Card withBorder>
+            <Title order={3}>Items</Title>
+            <Stack mt="md">
+              {task.subtasks.map((subtask) => (
+                <Checkbox
+                  key={subtask.id}
+                  label={subtask.title}
+                  checked={!!subtask.completedAt}
+                  disabled={complete.isPending}
+                  onChange={() => complete.mutate(subtask.id)}
+                />
+              ))}
+            </Stack>
+          </Card>
+        )}
+      </>
     );
   const questionsSection = task.relatedQuestions?.length ? (
     <Card withBorder mt="xl">
@@ -215,9 +241,15 @@ export function TaskDetailPage() {
           </Group>
         )}
       </Group>
-      <Badge color={task.status === "completed" ? "green" : "gray"}>
-        {task.status}
-      </Badge>
+      <Group justify="space-between" mt="sm">
+        <Badge color={task.status === "completed" ? "green" : "gray"}>
+          {task.status}
+        </Badge>
+        {memberCompletionControl}
+      </Group>
+      {!isHost && !task.subtasks.length && task.photoRequired && !task.photos.length && (
+        <Text size="sm" c="dimmed" mt="xs">Upload the required completion photo before marking this task complete.</Text>
+      )}
       {isHost && (
         <Select
           mt="md"

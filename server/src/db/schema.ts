@@ -70,6 +70,7 @@ export const tasks = pgTable("tasks", {
   urgency: urgencyEnum("urgency").notNull().default("low"),
   status: taskStatusEnum("status").notNull().default("open"),
   photoRequired: boolean("photo_required").notNull().default(false),
+  completionConfirmed: boolean("completion_confirmed").notNull().default(false),
   ...dates,
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()

@@ -21,4 +21,8 @@ describe("task completion logic", () => {
     expect(calculateTaskStatus([{ completedAt: new Date() }], true, 0)).toBe(
       "open",
     ));
+  it("allows a task without items to be completed explicitly", () =>
+    expect(calculateTaskStatus([], false, 0, true)).toBe("completed"));
+  it("still requires photo proof for a confirmed no-item task", () =>
+    expect(calculateTaskStatus([], true, 0, true)).toBe("open"));
 });

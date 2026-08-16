@@ -21,10 +21,7 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
     queryFn: () => taskApi.get(taskId!),
     enabled: edit,
   });
-  const [subtasks, setSubtasks] = useState<EditableSubtask[]>([
-    { title: "" },
-    { title: "" },
-  ]);
+  const [subtasks, setSubtasks] = useState<EditableSubtask[]>([]);
   useEffect(() => {
     if (edit && detail.data)
       setSubtasks(
@@ -47,12 +44,16 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const description = String(form.get("description") ?? "").trim();
+    const taskSubtasks = subtasks
+      .map(({ id, title }) => ({ id, title: title.trim() }))
+      .filter((subtask) => subtask.title);
     const base = {
       title: form.get("title"),
-      description: form.get("description") || null,
       urgency: form.get("urgency"),
       photoRequired: form.get("photoRequired") === "on",
-      subtasks,
+      subtasks: taskSubtasks,
+      ...(description && { description }),
     };
     mutation.mutate(
       edit
@@ -60,7 +61,7 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
         : {
             ...base,
             assignedToUserId: Number(form.get("assignedToUserId")),
-            subtasks: subtasks.map(({ title }) => ({ title })),
+            subtasks: taskSubtasks.map(({ title }) => ({ title })),
           },
     );
   };

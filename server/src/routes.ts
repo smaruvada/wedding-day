@@ -125,6 +125,7 @@ async function refreshStatus(task: typeof tasks.$inferSelect) {
     allSubtasks,
     task.photoRequired,
     photos.length,
+    task.completionConfirmed,
   );
   await db
     .update(tasks)
@@ -233,7 +234,7 @@ taskRouter.post("/", requireRole(...hostRoles), async (req, res) => {
         assignedToUserId: z.number().int(),
         urgency,
         photoRequired: z.boolean().default(false),
-        subtasks: z.array(z.object({ title: z.string().min(1) })).min(1),
+        subtasks: z.array(z.object({ title: z.string().min(1) })),
       })
       .parse(req.body);
     const [assignee] = await db
@@ -260,15 +261,17 @@ taskRouter.post("/", requireRole(...hostRoles), async (req, res) => {
         hostCreatedByUserId: req.user!.id,
       })
       .returning();
-    await db
-      .insert(subtasks)
-      .values(
-        input.subtasks.map((subtask, index) => ({
-          taskId: task.id,
-          title: subtask.title,
-          sortOrder: index + 1,
-        })),
-      );
+    if (input.subtasks.length) {
+      await db
+        .insert(subtasks)
+        .values(
+          input.subtasks.map((subtask, index) => ({
+            taskId: task.id,
+            title: subtask.title,
+            sortOrder: index + 1,
+          })),
+        );
+    }
     res.status(201).json({ task: await hydrateTask(task) });
   } catch (error) {
     fail(res, error);
@@ -346,7 +349,6 @@ taskRouter.patch("/:taskId", requireRole(...hostRoles), async (req, res) => {
               title: z.string().min(1),
             }),
           )
-          .min(1)
           .optional(),
       })
       .parse(req.body);
@@ -449,6 +451,28 @@ taskRouter.post("/:taskId/subtasks/:subtaskId/complete", async (req, res) => {
   await refreshStatus(task);
   const [updated] = await db.select().from(tasks).where(eq(tasks.id, task.id));
   res.json({ task: await hydrateTask(updated) });
+});
+taskRouter.post("/:taskId/complete", requireMemberView, async (req, res) => {
+  const task = await loadTaskForUser(Number(req.params.taskId), req.user!, true);
+  if (!task)
+    return res.status(403).json({ error: "You cannot update this task" });
+  const taskSubtasks = await db
+    .select({ id: subtasks.id })
+    .from(subtasks)
+    .where(eq(subtasks.taskId, task.id));
+  if (taskSubtasks.length)
+    return res.status(400).json({ error: "Complete this task's items instead" });
+  const [updated] = await db
+    .update(tasks)
+    .set({
+      completionConfirmed: !task.completionConfirmed,
+      updatedAt: new Date(),
+    })
+    .where(eq(tasks.id, task.id))
+    .returning();
+  await refreshStatus(updated);
+  const [fresh] = await db.select().from(tasks).where(eq(tasks.id, task.id));
+  res.json({ task: await hydrateTask(fresh) });
 });
 taskRouter.post(
   "/:taskId/photos",

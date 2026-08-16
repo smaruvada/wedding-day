@@ -73,6 +73,10 @@ export const taskApi = {
     data<{
       task: Task;
     }>(api.post(`/tasks/${taskId}/subtasks/${subtaskId}/complete`)),
+  completeTask: (taskId: number) =>
+    data<{
+      task: Task;
+    }>(api.post(`/tasks/${taskId}/complete`)),
   redelegate: (taskId: number, assignedToUserId: number) =>
     data<{
       task: Task;

@@ -12,6 +12,7 @@ import {
 } from "./routes.js";
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
+const clientDir = path.resolve("client/dist");
 const allowedOrigins = (process.env.CLIENT_ORIGIN ?? "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
@@ -71,12 +72,20 @@ app.use(express.json({ limit: "1mb" }));
 app.get("/healthz", (_req, res) => res.status(200).json({ status: "ok" }));
 app.use("/uploads", express.static(process.env.UPLOAD_DIR ?? "uploads"));
 app.use("/auth", authRouter);
+// `/tasks/:taskId` is both an API endpoint and a client-side route. On a
+// browser refresh, serve the SPA so it can make the authenticated API request.
+if (isProduction) {
+  app.get("/tasks/:taskId", (req, res, next) =>
+    req.headers.accept?.includes("text/html")
+      ? res.sendFile(path.join(clientDir, "index.html"))
+      : next(),
+  );
+}
 app.use("/tasks", taskRouter);
 app.use("/questions", questionRouter);
 app.use("/members", memberRouter);
 app.use("/admin", adminRouter);
 if (process.env.NODE_ENV === "production") {
-  const clientDir = path.resolve("client/dist");
   app.use(express.static(clientDir));
   app.get("*", (_req, res) => res.sendFile(path.join(clientDir, "index.html")));
 }

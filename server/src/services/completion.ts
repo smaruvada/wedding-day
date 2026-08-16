@@ -4,9 +4,12 @@ export function calculateTaskStatus(
   }[],
   photoRequired: boolean,
   photoCount: number,
+  completionConfirmed = false,
 ) {
-  return subtasks.length > 0 &&
-    subtasks.every((subtask) => subtask.completedAt) &&
+  const workCompleted = subtasks.length
+    ? subtasks.every((subtask) => subtask.completedAt)
+    : completionConfirmed;
+  return workCompleted &&
     (!photoRequired || photoCount > 0)
     ? "completed"
     : "open";
