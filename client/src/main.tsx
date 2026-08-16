@@ -56,6 +56,7 @@ import { QuestionsPage } from "./pages/QuestionsPage";
 import { TaskDetailPage } from "./pages/TaskDetailPage";
 import { TaskFormPage } from "./pages/TaskFormPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
+import { HelpPage } from "./pages/HelpPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { useAuthStore } from "./store";
 import { Question, Task } from "./types";
@@ -210,6 +211,7 @@ function App() {
         element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>}
       />
       <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+      <Route path="/help" element={<RequireAuth><HelpPage /></RequireAuth>} />
       <Route path="*" element={<Home />} />
     </Routes>
   );

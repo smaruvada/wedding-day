@@ -46,6 +46,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 Switch to {isHostView ? "member" : "host"} view
               </Menu.Item>}
               <Menu.Item component={Link} to="/profile">Profile</Menu.Item>
+              <Menu.Item component={Link} to="/help">Help</Menu.Item>
               <Menu.Item onClick={clear}>Log out</Menu.Item>
             </Menu.Dropdown>
           </Menu>
