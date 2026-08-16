@@ -39,7 +39,7 @@ export function ProfilePage() {
   };
   return (
     <Layout>
-      <Title mb="lg">Profile</Title>
+      <Title className="list-page-heading" mb="lg">Profile</Title>
       <Card withBorder maw={520}>
         <Stack gap="sm">
           {editingName ? (
