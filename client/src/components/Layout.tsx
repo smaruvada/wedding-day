@@ -41,6 +41,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <Button className="account-menu-button" variant="subtle">{user.name}</Button>
             </Menu.Target>
             <Menu.Dropdown>
+              <Menu.Item component={Link} to="/profile">Profile</Menu.Item>
               <Menu.Item onClick={clear}>Log out</Menu.Item>
             </Menu.Dropdown>
           </Menu>

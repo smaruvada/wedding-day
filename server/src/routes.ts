@@ -170,6 +170,41 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 authRouter.get("/me", requireAuth, (req, res) => res.json({ user: req.user }));
+authRouter.patch("/me", requireAuth, async (req, res) => {
+  try {
+    const input = z.object({ name: z.string().trim().min(1) }).parse(req.body);
+    const [user] = await db
+      .update(users)
+      .set({ name: input.name })
+      .where(eq(users.id, req.user!.id))
+      .returning();
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({ user: publicUser(user) });
+  } catch (error) {
+    fail(res, error);
+  }
+});
+authRouter.patch("/me/password", requireAuth, async (req, res) => {
+  try {
+    const input = z
+      .object({ currentPassword: z.string(), newPassword: z.string().min(8) })
+      .parse(req.body);
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, req.user!.id))
+      .limit(1);
+    if (!user || !(await bcrypt.compare(input.currentPassword, user.passwordHash)))
+      return res.status(400).json({ error: "Current password is incorrect" });
+    await db
+      .update(users)
+      .set({ passwordHash: await bcrypt.hash(input.newPassword, 12) })
+      .where(eq(users.id, user.id));
+    res.status(204).send();
+  } catch (error) {
+    fail(res, error);
+  }
+});
 export const taskRouter = Router();
 taskRouter.use(requireAuth);
 taskRouter.post("/", requireRole(...hostRoles), async (req, res) => {

@@ -31,6 +31,10 @@ export const authApi = {
     data<{
       user: User;
     }>(api.get("/auth/me")),
+  updateProfile: (payload: { name: string }) =>
+    data<{ user: User }>(api.patch("/auth/me", payload)),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    data<void>(api.patch("/auth/me/password", { currentPassword, newPassword })),
 };
 export const taskApi = {
   list: () =>

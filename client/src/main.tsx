@@ -56,6 +56,7 @@ import { QuestionsPage } from "./pages/QuestionsPage";
 import { TaskDetailPage } from "./pages/TaskDetailPage";
 import { TaskFormPage } from "./pages/TaskFormPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { useAuthStore } from "./store";
 import { Question, Task } from "./types";
 import { weddingTheme } from "./theme";
@@ -206,6 +207,7 @@ function App() {
         path="/admin/users"
         element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>}
       />
+      <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
       <Route path="*" element={<Home />} />
     </Routes>
   );
