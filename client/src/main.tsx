@@ -205,7 +205,7 @@ function App() {
         }
       />
       <Route
-        path="/admin/users"
+        path="/users"
         element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>}
       />
       <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />

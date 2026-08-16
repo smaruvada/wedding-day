@@ -34,7 +34,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Button component={Link} to={isHostView ? "/host/questions" : "/me/questions"} variant="subtle">
               Questions&nbsp; <Badge size="sm" circle>{openQuestionCount}</Badge>
             </Button>
-            {user.role === "admin" && <Button component={Link} to="/admin/users" variant="subtle">Users</Button>}
+            {user.role === "admin" && <Button component={Link} to="/users" variant="subtle">Users</Button>}
           </Group>
           <Menu position="bottom-end">
             <Menu.Target>
