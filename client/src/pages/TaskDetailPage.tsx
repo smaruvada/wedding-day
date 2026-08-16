@@ -191,6 +191,8 @@ export function TaskDetailPage() {
         <SubtaskEditor
           task={task}
           onSave={(subtasks) => subtaskMutation.mutate(subtasks)}
+          showDisplayDeleteButton
+          useCancelButtonForEdits
         />
         {subtaskMutation.error && <ErrorBox error={subtaskMutation.error} />}
       </Card>
