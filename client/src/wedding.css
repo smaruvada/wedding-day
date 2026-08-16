@@ -58,6 +58,17 @@ body {
   cursor: pointer;
 }
 
+.question-count-badge-button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.question-count-badge-button .mantine-Badge-root {
+  cursor: pointer;
+}
+
 .question-context {
   align-items: stretch;
 }
