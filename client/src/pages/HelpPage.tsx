@@ -55,6 +55,19 @@ export function HelpPage() {
             </List>
           )}
         </Card>
+
+        {user.role === "admin" && (
+          <Card withBorder>
+            <Title order={2}>User management</Title>
+            <List mt="sm" spacing="xs">
+              <List.Item>Open <strong>Users</strong> in the main navigation to view every account, including its ID, name, email or username, role, role type, event, and creation date.</List.Item>
+              <List.Item>Select <strong>+</strong> to create an account. Enter a name, email or username, and a password of at least 8 characters containing an uppercase letter, number, and special character. New accounts can be created as members or hosts, with an optional wedding-party role type.</List.Item>
+              <List.Item>Select <strong>Edit</strong> beside an account to update its name, email or username, role, role type, or password. Passwords are never shown; enter a new password only when you want to reset it.</List.Item>
+              <List.Item>Administrators can assign member, host, or admin roles when editing other accounts. You cannot change your own role.</List.Item>
+              <List.Item>Select <strong>Delete</strong> and confirm to permanently remove another account. You cannot delete your own account; that person&apos;s existing tasks, questions, and photos are kept.</List.Item>
+            </List>
+          </Card>
+        )}
       </Stack>
     </Layout>
   );
