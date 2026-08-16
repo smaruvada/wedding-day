@@ -15,7 +15,7 @@ function TaskCreationMenu({ onImport }: { onImport: () => void }) {
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item component={Link} to="/host/tasks/new">
-          Create one task
+          Create task
         </Menu.Item>
         <Menu.Item onClick={onImport}>Add task list</Menu.Item>
       </Menu.Dropdown>
