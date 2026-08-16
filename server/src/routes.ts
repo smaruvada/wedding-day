@@ -267,15 +267,22 @@ taskRouter.post("/import", requireRole(...hostRoles), async (req, res) => {
   try {
     const input = z
       .object({
-        titles: z.array(z.string().trim().min(1).max(500)).min(1).max(100),
+        tasks: z.array(
+          z.object({
+            title: z.string().trim().min(1).max(500),
+            description: z.string().trim().max(5000).optional(),
+            urgency: urgency.optional(),
+          }),
+        ).min(1).max(100),
       })
       .parse(req.body);
     const createdTasks = await db.transaction(async (transaction) =>
       transaction
         .insert(tasks)
         .values(
-          input.titles.map((title) => ({
-            title,
+          input.tasks.map((task) => ({
+            ...task,
+            description: task.description || null,
             eventId: req.user!.eventId,
             hostCreatedByUserId: req.user!.id,
           })),

@@ -1,6 +1,12 @@
 import axios from "axios";
 import { useAuthStore } from "./store";
 import { Question, Task, User } from "./types";
+
+export type ImportedTask = {
+  title: string;
+  description?: string;
+  urgency?: "low" | "medium" | "high" | "urgent";
+};
 export const api = axios.create();
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
@@ -53,10 +59,10 @@ export const taskApi = {
     data<{
       task: Task;
     }>(api.post("/tasks", payload)),
-  import: (titles: string[]) =>
+  import: (tasks: ImportedTask[]) =>
     data<{
       tasks: Task[];
-    }>(api.post("/tasks/import", { titles })),
+    }>(api.post("/tasks/import", { tasks })),
   update: (taskId: number, payload: object) =>
     data<{
       task: Task;
