@@ -1,6 +1,5 @@
-import { Button, Checkbox, Group, Stack, Text, TextInput } from "@mantine/core";
+import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { taskApi } from "../api";
 import { Task } from "../types";
 
 export type EditableSubtask = {
@@ -11,11 +10,9 @@ export type EditableSubtask = {
 export function SubtaskEditor({
   task,
   onSave,
-  onToggle,
 }: {
   task: Task;
   onSave: (subtasks: EditableSubtask[]) => void;
-  onToggle?: (subtaskId: number) => void;
 }) {
   const [subtasks, setSubtasks] = useState<EditableSubtask[]>(
     task.subtasks.map(({ id, title }) => ({ id, title })),
@@ -38,11 +35,6 @@ export function SubtaskEditor({
     onSave(next);
     setEditingIndex(null);
   };
-  const toggle = (subtaskId: number) => {
-    if (onToggle) return onToggle(subtaskId);
-    void taskApi.complete(task.id, subtaskId).then(() => window.location.reload());
-  };
-
   return (
     <Stack mt="md">
       {subtasks.map((subtask, index) =>
@@ -67,7 +59,6 @@ export function SubtaskEditor({
           </Group>
         ) : (
           <Group key={subtask.id ?? `new-${index}`} gap="xs">
-            {task.id && <Checkbox checked={!!task.subtasks[index]?.completedAt} onChange={() => subtask.id && toggle(subtask.id)} />}
             <Text className="subtask-display" onClick={() => setEditingIndex(index)}>{subtask.title}</Text>
           </Group>
         ),

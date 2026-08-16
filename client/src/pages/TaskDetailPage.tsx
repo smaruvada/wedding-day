@@ -128,7 +128,6 @@ export function TaskDetailPage() {
         <SubtaskEditor
           task={task}
           onSave={(subtasks) => subtaskMutation.mutate(subtasks)}
-          onToggle={(subtaskId) => complete.mutate(subtaskId)}
         />
         {subtaskMutation.error && <ErrorBox error={subtaskMutation.error} />}
       </Card>
