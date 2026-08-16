@@ -763,9 +763,15 @@ const adminUser = (user: typeof users.$inferSelect) => ({
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireRole("admin"));
-adminRouter.get("/users", async (_req, res) =>
+adminRouter.get("/users", async (req, res) =>
   res.json({
-    users: (await db.select().from(users).orderBy(asc(users.name))).map(adminUser),
+    users: (
+      await db
+        .select()
+        .from(users)
+        .where(eq(users.eventId, req.user!.eventId))
+        .orderBy(asc(users.name))
+    ).map(adminUser),
   }),
 );
 adminRouter.post("/users", async (req, res) => {
@@ -809,7 +815,12 @@ adminRouter.patch("/users/:userId", async (req, res) => {
     const [existing] = await db
       .select()
       .from(users)
-      .where(eq(users.id, Number(req.params.userId)))
+      .where(
+        and(
+          eq(users.id, Number(req.params.userId)),
+          eq(users.eventId, req.user!.eventId),
+        ),
+      )
       .limit(1);
     if (!existing) return res.status(404).json({ error: "User not found" });
     if (
