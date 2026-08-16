@@ -40,6 +40,11 @@ function BulkTaskImportModal({
       client.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
+  const handleClose = () => {
+    setTaskList("");
+    mutation.reset();
+    onClose();
+  };
   const handleFile = async (file: File | null) => {
     if (file) setTaskList(await file.text());
   };
@@ -48,7 +53,7 @@ function BulkTaskImportModal({
     .map((title) => title.trim())
     .filter(Boolean);
   return (
-    <Modal opened={opened} onClose={onClose} title="Add a task list">
+    <Modal opened={opened} onClose={handleClose} title="Add a task list">
       <Stack>
         <Text size="sm" c="dimmed">
           Add one task per line. Every task is created unassigned.
@@ -65,7 +70,7 @@ function BulkTaskImportModal({
         </FileButton>
         {mutation.error && <ErrorBox error={mutation.error} />}
         <Group justify="flex-end">
-          <Button variant="light" onClick={onClose}>Cancel</Button>
+          <Button variant="light" onClick={handleClose}>Cancel</Button>
           <Button
             disabled={!titles.length}
             loading={mutation.isPending}
