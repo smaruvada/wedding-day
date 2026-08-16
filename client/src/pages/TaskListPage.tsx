@@ -129,7 +129,7 @@ function BulkTaskImportModal({
             <Stack gap="xs">
               <Text size="sm">Upload an Excel or CSV spreadsheet with column headers in the first row.</Text>
               <Text size="sm"><strong>Title</strong> is required. <strong>Description</strong> and <strong>Urgency</strong> are optional.</Text>
-              <Text size="sm">Urgency must be one of: low, medium, high, or urgent.</Text>
+              <Text size="sm">Urgency (if provided) must be one of: low, medium, high, or urgent.</Text>
             </Stack>
           </Popover.Dropdown>
         </Popover>
