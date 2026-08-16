@@ -14,7 +14,6 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
   const members = useQuery({
     queryKey: ["members"],
     queryFn: taskApi.members,
-    enabled: !edit,
   });
   const detail = useQuery({
     queryKey: ["task", taskId],
@@ -29,8 +28,18 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
       );
   }, [detail.data, edit]);
   const mutation = useMutation({
-    mutationFn: (payload: object) =>
-      edit ? taskApi.update(Number(taskId), payload) : taskApi.create(payload),
+    mutationFn: async (payload: {
+      assignedToUserId: number;
+      [key: string]: unknown;
+    }) => {
+      if (!edit) return taskApi.create(payload);
+
+      const { assignedToUserId, ...changes } = payload;
+      const updated = await taskApi.update(Number(taskId), changes);
+      return assignedToUserId === task?.assignedToUserId
+        ? updated
+        : taskApi.redelegate(Number(taskId), assignedToUserId);
+    },
     onSuccess: ({ task }) =>
       navigate(edit ? `/tasks/${task.id}` : "/host/tasks"),
   });
@@ -45,6 +54,7 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const description = String(form.get("description") ?? "").trim();
+    const assignedToUserId = Number(form.get("assignedToUserId"));
     const taskSubtasks = subtasks
       .map(({ id, title }) => ({ id, title: title.trim() }))
       .filter((subtask) => subtask.title);
@@ -57,10 +67,10 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
     };
     mutation.mutate(
       edit
-        ? base
+        ? { ...base, assignedToUserId }
         : {
             ...base,
-            assignedToUserId: Number(form.get("assignedToUserId")),
+            assignedToUserId,
             subtasks: taskSubtasks.map(({ title }) => ({ title })),
           },
     );
@@ -87,17 +97,18 @@ export function TaskFormPage({ edit = false }: { edit?: boolean }) {
             defaultValue={task?.urgency ?? "low"}
             data={["low", "medium", "high", "urgent"]}
           />
-          {!edit && (
-            <Select
-              required
-              name="assignedToUserId"
-              label="Assign to"
-              data={(members.data?.users ?? []).map((member) => ({
-                value: String(member.id),
-                label: member.name,
-              }))}
-            />
-          )}
+          <Select
+            required
+            name="assignedToUserId"
+            label="Assign to"
+            defaultValue={
+              task?.assignedToUserId ? String(task.assignedToUserId) : undefined
+            }
+            data={(members.data?.users ?? []).map((member) => ({
+              value: String(member.id),
+              label: member.name,
+            }))}
+          />
           <Checkbox
             name="photoRequired"
             label="Require completion photo"

@@ -246,13 +246,11 @@ export function TaskDetailPage() {
         </Badge>
         {memberCompletionControl}
       </Group>
-      {!isHost && !task.subtasks.length && task.photoRequired && !task.photos.length && (
-        <Text size="sm" c="dimmed" mt="xs">Upload the required completion photo before marking this task complete.</Text>
-      )}
       {isHost && (
         <Select
-          mt="md"
-          label="Assign to"
+          w={180}
+          mt="sm"
+          // label="Assign to"
           placeholder="Choose a member"
           value={task.assignedToUserId ? String(task.assignedToUserId) : null}
           data={(members.data?.users ?? []).map((member) => ({
@@ -264,6 +262,9 @@ export function TaskDetailPage() {
             if (value) assignmentMutation.mutate(Number(value));
           }}
         />
+      )}
+      {!isHost && !task.subtasks.length && task.photoRequired && !task.photos.length && (
+        <Text size="sm" c="dimmed" mt="xs">Upload the required completion photo before marking this task complete.</Text>
       )}
       {assignmentMutation.error && <ErrorBox error={assignmentMutation.error} />}
       <Text c="dimmed" my="md">
