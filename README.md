@@ -14,6 +14,8 @@ npm run dev
 
 The client runs at `http://localhost:5173`; the API runs at `http://localhost:3001`.
 
+To open the development client from another device on your local network, run the client with `--host` (the default `npm run dev` already does this). Private-network origins are accepted by the API in development. In production, set `CLIENT_ORIGIN` to every permitted public origin.
+
 ## Production deployment
 
 The production container serves the built React client and API from one origin on port `3001`. It applies database migrations on startup, stores uploads in a persistent volume, and requires a production JWT secret of at least 32 characters. Migrations ensure an admin account is available on every deployment: username `admin`, password `Wedding123!`. Change this password from the Admin page immediately after first sign-in.

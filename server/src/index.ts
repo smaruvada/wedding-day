@@ -17,6 +17,31 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN ?? "http://localhost:5173")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+const isPrivateNetworkHost = (host: string) => {
+  if (host === "localhost" || host.endsWith(".localhost") || host === "::1") return true;
+
+  const octets = host.split(".").map(Number);
+  if (octets.length !== 4 || octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) {
+    return false;
+  }
+
+  return (
+    octets[0] === 10 ||
+    octets[0] === 127 ||
+    (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+    (octets[0] === 192 && octets[1] === 168)
+  );
+};
+
+const isAllowedDevelopmentOrigin = (origin: string) => {
+  try {
+    const url = new URL(origin);
+    return (url.protocol === "http:" || url.protocol === "https:") && isPrivateNetworkHost(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
 app.disable("x-powered-by");
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -31,7 +56,13 @@ app.use((req, res, next) => {
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        (!isProduction && isAllowedDevelopmentOrigin(origin))
+      ) {
+        return callback(null, true);
+      }
       return callback(new Error("Origin is not allowed by CORS"));
     },
   }),
