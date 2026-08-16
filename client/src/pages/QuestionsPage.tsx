@@ -1,4 +1,5 @@
 import { Alert, Badge, Button, Card, FileButton, Group, Modal, Select, SimpleGrid, Stack, Text, Textarea, Title } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -27,6 +28,7 @@ export function QuestionCard({
 }) {
   const [showTask, setShowTask] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [content, setContent] = useState(question.content);
   const [answerText, setAnswerText] = useState(question.answerText ?? "");
   const relatedTask = useQuery({
@@ -54,7 +56,7 @@ export function QuestionCard({
           <Text fw={600}>{question.content}</Text>
           <Group>
             <QuestionUrgencyBadge question={question} isHost={isHost} onChange={(urgency) => onUrgencyChange(question.id, urgency)} />
-            {onDelete && <Button color="red" variant="subtle" size="xs" onClick={(event) => { event.stopPropagation(); onDelete(); }}>×</Button>}
+            {onDelete && <Button color="red" variant="subtle" size="xs" onClick={(event) => { event.stopPropagation(); setDeleteConfirmationOpen(true); }} aria-label="Delete question" title="Delete question"><IconTrash size={16} stroke={1.8} /></Button>}
           </Group>
         </Group>
         {question.answerText && <Alert mt="sm" color="blue">{question.answerText}</Alert>}
@@ -62,6 +64,7 @@ export function QuestionCard({
         {isHost && <Stack mt="md"><Textarea value={answerText} onChange={(event) => setAnswerText(event.currentTarget.value)} placeholder="Write an answer" /><Button onClick={() => onStatusChange(question.id, "resolved", answerText)} disabled={!answerText.trim()}>Answer</Button></Stack>}
         {question.taskId && <Group justify="center" mt="sm"><Button variant="subtle" size="xs" aria-label={showTask ? "Collapse related task" : "Expand related task"} onClick={(event) => { event.stopPropagation(); setShowTask((current) => !current); }}>{showTask ? "↑" : "↓"}</Button></Group>}
         <Modal opened={editing} onClose={() => setEditing(false)} onClick={(event) => event.stopPropagation()} title="Edit question"><Stack><Textarea value={content} onChange={(event) => setContent(event.currentTarget.value)} label="Question" /><Group justify="flex-end"><Button variant="light" onClick={() => setEditing(false)}>Cancel</Button><Button onClick={() => { if (content.trim()) { onEdit?.(content.trim()); setEditing(false); } }} disabled={!content.trim()}>Save</Button></Group></Stack></Modal>
+        <Modal opened={deleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)} onClick={(event) => event.stopPropagation()} title="Delete question?"><Stack><Text>Are you sure you want to permanently delete this question?</Text><Group justify="flex-end"><Button variant="light" onClick={() => setDeleteConfirmationOpen(false)}>Cancel</Button><Button color="red" onClick={() => { onDelete?.(); setDeleteConfirmationOpen(false); }}>Delete question</Button></Group></Stack></Modal>
         {showTask && relatedTask.data && <div className="related-task-panel"><Text fw={600}>{relatedTask.data.task.title}</Text><Text size="sm" c="dimmed">{relatedTask.data.task.description}</Text><Button component={Link} to={`/tasks/${question.taskId}`} variant="light" size="xs">Open full task</Button></div>}
         {showTask && relatedTask.isLoading && <Loading />}
         {showTask && relatedTask.error && <ErrorBox error={relatedTask.error} />}

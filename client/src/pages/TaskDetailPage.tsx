@@ -257,6 +257,7 @@ export function TaskDetailPage() {
                   {question.status}
                 </Badge>
               </Group>
+              {!isHost && <QuestionPhotos photos={question.photos} />}
             </div>
             {!isHost && (
               <RelatedQuestionMemberActions

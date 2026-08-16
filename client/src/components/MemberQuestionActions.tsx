@@ -24,10 +24,24 @@ export function MemberQuestionEditModal({ question, taskId, opened, onClose }: {
 
 export function RelatedQuestionMemberActions({ question, taskId }: { question: { id: number; status: "open" | "resolved" }; taskId: string }) {
   const client = useQueryClient();
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const remove = useMutation({ mutationFn: () => questionApi.remove(question.id), onSuccess: () => {
     client.invalidateQueries({ queryKey: ["task", taskId] });
     client.invalidateQueries({ queryKey: ["questions"] });
+    setDeleteConfirmationOpen(false);
   }});
   if (question.status !== "open") return null;
-  return <Button color="red" variant="subtle" size="xs" onClick={(event) => { event.stopPropagation(); remove.mutate(); }} loading={remove.isPending} aria-label="Delete question" title="Delete question"><IconTrash size={16} stroke={1.8} /></Button>;
+  return <>
+    <Button color="red" variant="subtle" size="xs" onClick={(event) => { event.stopPropagation(); setDeleteConfirmationOpen(true); }} aria-label="Delete question" title="Delete question"><IconTrash size={16} stroke={1.8} /></Button>
+    <Modal opened={deleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)} title="Delete question?">
+      <Stack>
+        <div>Are you sure you want to permanently delete this question?</div>
+        {remove.error && <ErrorBox error={remove.error} />}
+        <Group justify="flex-end">
+          <Button variant="light" onClick={() => setDeleteConfirmationOpen(false)} disabled={remove.isPending}>Cancel</Button>
+          <Button color="red" onClick={() => remove.mutate()} loading={remove.isPending}>Delete question</Button>
+        </Group>
+      </Stack>
+    </Modal>
+  </>;
 }
