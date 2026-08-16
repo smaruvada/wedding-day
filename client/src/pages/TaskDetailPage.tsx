@@ -356,6 +356,7 @@ export function TaskDetailPage() {
                   variant="transparent"
                   p={0}
                   h="auto"
+                  className="urgency-badge-button"
                   aria-label="Change urgency"
                   title="Change urgency"
                 >
