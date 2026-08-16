@@ -1,4 +1,4 @@
-import { Button, Checkbox, Group, Select, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
+import { Button, Card, Checkbox, Group, Select, Stack, TextInput, Textarea, Title } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -73,12 +73,15 @@ export function TaskFormPage() {
             name="photoRequired"
             label="Require completion photo"
           />
-          <Text fw={600}>Items</Text>
-          <SubtaskEditor
-            task={{ subtasks } as Task}
-            onSave={(updated) => setSubtasks(updated)}
-            compactAddButton
-          />
+          <Card withBorder>
+            <Title order={3}>Items</Title>
+            <SubtaskEditor
+              task={{ subtasks } as Task}
+              onSave={(updated) => setSubtasks(updated)}
+              showDisplayDeleteButton
+              useCancelButtonForEdits
+            />
+          </Card>
           {mutation.error && <ErrorBox error={mutation.error} />}
           <Group>
             <Button

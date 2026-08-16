@@ -25,10 +25,12 @@ export function SubtaskEditor({
     task.subtasks.map(({ id, title }) => ({ id, title })),
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [newSubtaskIndex, setNewSubtaskIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setSubtasks(task.subtasks.map(({ id, title }) => ({ id, title })));
     setEditingIndex(null);
+    setNewSubtaskIndex(null);
   }, [task.subtasks]);
 
   const change = (index: number, title: string) =>
@@ -42,24 +44,29 @@ export function SubtaskEditor({
     setSubtasks(savedSubtasks);
     onSave(savedSubtasks);
     setEditingIndex(null);
+    setNewSubtaskIndex(null);
   };
   const hasUnsavedNewSubtask =
-    editingIndex !== null && subtasks[editingIndex]?.id === undefined;
+    editingIndex !== null && editingIndex === newSubtaskIndex;
   const hasBlankNewSubtask =
     hasUnsavedNewSubtask && !subtasks[editingIndex]?.title.trim();
   const cancelEdit = (index: number) => {
     const subtask = subtasks[index];
-    if (subtask.id === undefined) {
+    if (index === newSubtaskIndex) {
       setSubtasks((current) =>
         current.filter((_, subtaskIndex) => subtaskIndex !== index),
       );
     } else {
-      const originalTitle = task.subtasks.find(
-        (taskSubtask) => taskSubtask.id === subtask.id,
-      )?.title;
+      const originalTitle =
+        subtask.id === undefined
+          ? task.subtasks[index]?.title
+          : task.subtasks.find(
+              (taskSubtask) => taskSubtask.id === subtask.id,
+            )?.title;
       if (originalTitle !== undefined) change(index, originalTitle);
     }
     setEditingIndex(null);
+    setNewSubtaskIndex(null);
   };
   return (
     <Stack mt={compactAddButton ? "xs" : "md"}>
@@ -105,6 +112,7 @@ export function SubtaskEditor({
                   setSubtasks((current) =>
                     current.filter((_, subtaskIndex) => subtaskIndex !== editingIndex),
                   );
+                  setNewSubtaskIndex(null);
                   setEditingIndex(
                     editingIndex < index ? index - 1 : index,
                   );
@@ -146,6 +154,7 @@ export function SubtaskEditor({
           if (hasUnsavedNewSubtask) return;
           setSubtasks((current) => [...current, { title: "" }]);
           setEditingIndex(subtasks.length);
+          setNewSubtaskIndex(subtasks.length);
         }}
         disabled={hasUnsavedNewSubtask}
         aria-label="Add subtask"
