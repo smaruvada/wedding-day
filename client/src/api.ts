@@ -122,4 +122,5 @@ export const adminApi = {
     data<{ user: User }>(api.post("/admin/users", payload)),
   updateUser: (id: number, payload: object) =>
     data<{ user: User }>(api.patch(`/admin/users/${id}`, payload)),
+  deleteUser: (id: number) => data<void>(api.delete(`/admin/users/${id}`)),
 };

@@ -11,7 +11,11 @@ import {
 export const roleEnum = pgEnum("role", ["member", "host", "admin"]);
 export const roleTypeEnum = pgEnum("role_type", [
   "bride",
+  "groom",
   "maid_of_honor",
+  "best_man",
+  "bridesmaid",
+  "groomsman",
   "planner",
   "other",
 ]);
@@ -59,11 +63,10 @@ export const tasks = pgTable("tasks", {
     .references(() => events.id),
   title: text("title").notNull(),
   description: text("description"),
-  assignedToUserId: integer("assigned_to_user_id")
-    .references(() => users.id),
-  hostCreatedByUserId: integer("host_created_by_user_id")
-    .notNull()
-    .references(() => users.id),
+    assignedToUserId: integer("assigned_to_user_id")
+      .references(() => users.id, { onDelete: "set null" }),
+    hostCreatedByUserId: integer("host_created_by_user_id")
+      .references(() => users.id, { onDelete: "set null" }),
   urgency: urgencyEnum("urgency").notNull().default("low"),
   status: taskStatusEnum("status").notNull().default("open"),
   photoRequired: boolean("photo_required").notNull().default(false),
@@ -79,7 +82,9 @@ export const subtasks = pgTable("subtasks", {
     .references(() => tasks.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   sortOrder: integer("sort_order").notNull(),
-  completedByUserId: integer("completed_by_user_id").references(() => users.id),
+  completedByUserId: integer("completed_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
 });
 export const taskPhotos = pgTable("task_photos", {
@@ -88,8 +93,7 @@ export const taskPhotos = pgTable("task_photos", {
     .notNull()
     .references(() => tasks.id, { onDelete: "cascade" }),
   uploadedByUserId: integer("uploaded_by_user_id")
-    .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "set null" }),
   filePath: text("file_path").notNull(),
   ...dates,
 });
@@ -99,8 +103,7 @@ export const questions = pgTable("questions", {
     .notNull()
     .references(() => events.id),
   askedByUserId: integer("asked_by_user_id")
-    .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "set null" }),
   taskId: integer("task_id").references(() => tasks.id),
   content: text("content").notNull(),
   urgency: urgencyEnum("urgency").notNull().default("low"),
@@ -117,8 +120,7 @@ export const questionPhotos = pgTable("question_photos", {
     .notNull()
     .references(() => questions.id, { onDelete: "cascade" }),
   uploadedByUserId: integer("uploaded_by_user_id")
-    .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "set null" }),
   filePath: text("file_path").notNull(),
   ...dates,
 });

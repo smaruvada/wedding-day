@@ -757,7 +757,16 @@ memberRouter.get("/", async (req, res) =>
   }),
 );
 
-const roleType = z.enum(["bride", "maid_of_honor", "planner", "other"]);
+const roleType = z.enum([
+  "bride",
+  "groom",
+  "maid_of_honor",
+  "best_man",
+  "bridesmaid",
+  "groomsman",
+  "planner",
+  "other",
+]);
 const adminUser = (user: typeof users.$inferSelect) => ({
   id: user.id,
   name: user.name,
@@ -851,6 +860,25 @@ adminRouter.patch("/users/:userId", async (req, res) => {
       .where(eq(users.id, existing.id))
       .returning();
     res.json({ user: adminUser(user) });
+  } catch (error) {
+    fail(res, error);
+  }
+});
+adminRouter.delete("/users/:userId", async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    if (!Number.isInteger(userId))
+      return res.status(400).json({ error: "Invalid user ID" });
+    if (userId === req.user!.id)
+      return res.status(403).json({ error: "You cannot delete your own account" });
+    const [existing] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, userId), eq(users.eventId, req.user!.eventId)))
+      .limit(1);
+    if (!existing) return res.status(404).json({ error: "User not found" });
+    await db.delete(users).where(eq(users.id, existing.id));
+    res.status(204).end();
   } catch (error) {
     fail(res, error);
   }
