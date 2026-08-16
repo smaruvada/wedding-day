@@ -129,7 +129,7 @@ export function QuestionsPage() {
   return (
     <Layout>
       <Group justify="space-between" mb="lg">
-        <Title className="list-page-heading">{isHost ? "All Questions" : "My Questions"}</Title>
+        <Title className="list-page-heading">{isHost ? "Questions" : "My Questions"}</Title>
         {user.role === "member" && (
           <Button onClick={() => setOpen(true)}>Ask host</Button>
         )}

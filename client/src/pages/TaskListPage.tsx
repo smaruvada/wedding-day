@@ -169,7 +169,7 @@ export function TaskListPage({ host = false }: { host?: boolean }) {
 
   return <Layout>
     <Group justify="space-between" mb="lg">
-      <Title className="list-page-heading">{host ? "All Tasks" : "My Tasks"}</Title>
+      <Title className="list-page-heading">{host ? "Tasks" : "My Tasks"}</Title>
       {host && <Group gap="xs"><Button variant="light" onClick={() => setFiltersOpen((current) => !current)} aria-expanded={filtersOpen}>Filters</Button>{taskCreationMenu()}</Group>}
     </Group>
     {host && filtersOpen && <Group mb="md">
