@@ -37,7 +37,16 @@ export function QuestionPhotos({ photos }: { photos: Photo[] }) {
     <div onClick={(event) => event.stopPropagation()}>
       <Group mt="sm">{photos.map((photo) => <div key={photo.id} className="task-photo">
         <button type="button" className="photo-preview-button" onClick={() => setSelectedPhoto(photo.filePath)}><img src={photo.filePath} alt="Question attachment" /></button>
-        <Button color="red" variant="subtle" size="xs" onClick={() => remove.mutate(photo.id)} loading={remove.isPending}>Delete</Button>
+        <button
+          type="button"
+          className="question-photo-delete"
+          onClick={() => remove.mutate(photo.id)}
+          disabled={remove.isPending}
+          aria-label="Delete question photo"
+          title="Delete question photo"
+        >
+          ×
+        </button>
       </div>)}</Group>
       {remove.error && <ErrorBox error={remove.error} />}
     </div>

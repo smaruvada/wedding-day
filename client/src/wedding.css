@@ -169,6 +169,43 @@ body {
   width: 96px;
 }
 
+.question-photo-delete {
+  align-items: center;
+  background: rgba(45, 31, 30, 0.82);
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  font-size: 1.15rem;
+  font-weight: 400;
+  height: 1.5rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0 0 0.08rem;
+  position: absolute;
+  right: -0.4rem;
+  top: -0.4rem;
+  transition: background-color 150ms ease, transform 150ms ease;
+  width: 1.5rem;
+}
+
+.question-photo-delete:hover:not(:disabled) {
+  background: #b42318;
+  transform: scale(1.08);
+}
+
+.question-photo-delete:focus-visible {
+  outline: 2px solid #87433f;
+  outline-offset: 2px;
+}
+
+.question-photo-delete:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .expanded-photo {
   display: block;
   height: auto;
