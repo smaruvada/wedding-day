@@ -200,7 +200,7 @@ export function TaskDetailPage() {
     ) : (
       <>
         {task.subtasks.length > 0 && (
-          <Card withBorder>
+          <Card withBorder mt={task.openQuestionCount ? "xl" : undefined}>
             <Title order={3}>Items</Title>
             <Stack mt="md">
               {task.subtasks.map((subtask) => (
