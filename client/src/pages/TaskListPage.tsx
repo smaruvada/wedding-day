@@ -7,6 +7,7 @@ import { ImportedTask, taskApi } from "../api";
 import { EmptyState, ErrorBox, Loading } from "../components/feedback";
 import { Layout } from "../components/Layout";
 import { TaskCard } from "../components/TaskCard";
+import { useAuthStore } from "../store";
 
 function TaskCreationMenu({ onImport }: { onImport: () => void }) {
   return (
@@ -151,6 +152,8 @@ function BulkTaskImportModal({
 }
 
 export function TaskListPage({ host = false }: { host?: boolean }) {
+  const viewMode = useAuthStore((state) => state.viewMode);
+  const isHost = host && viewMode === "host";
   const query = useQuery({ queryKey: ["tasks"], queryFn: taskApi.list });
   const [status, setStatus] = useState<string | null>(null);
   const [urgency, setUrgency] = useState<string | null>(null);
@@ -169,15 +172,15 @@ export function TaskListPage({ host = false }: { host?: boolean }) {
 
   return <Layout>
     <Group justify="space-between" mb="lg">
-      <Title className="list-page-heading">{host ? "Tasks" : "My Tasks"}</Title>
-      {host && <Group gap="xs"><Button variant="light" onClick={() => setFiltersOpen((current) => !current)} aria-expanded={filtersOpen}>Filters</Button>{taskCreationMenu()}</Group>}
+      <Title className="list-page-heading">{isHost ? "Tasks" : "My Tasks"}</Title>
+      {isHost && <Group gap="xs"><Button variant="light" onClick={() => setFiltersOpen((current) => !current)} aria-expanded={filtersOpen}>Filters</Button>{taskCreationMenu()}</Group>}
     </Group>
-    {host && filtersOpen && <Group mb="md">
+    {isHost && filtersOpen && <Group mb="md">
       <Select placeholder="Status" clearable data={["open", "completed"]} value={status} onChange={setStatus} />
       <Select placeholder="Urgency" clearable data={["low", "medium", "high", "urgent"]} value={urgency} onChange={setUrgency} />
     </Group>}
-    {tasks.length ? <SimpleGrid cols={{ base: 1, sm: 2 }}>{tasks.map((task) => <TaskCard key={task.id} task={task} host={host} />)}</SimpleGrid> :
-      <EmptyState message={host ? "No tasks yet." : "No tasks assigned yet."} action={host ? taskCreationMenu() : <Button component={Link} to="/me/questions">Ask a question</Button>} />}
+    {tasks.length ? <SimpleGrid cols={{ base: 1, sm: 2 }}>{tasks.map((task) => <TaskCard key={task.id} task={task} host={isHost} />)}</SimpleGrid> :
+      <EmptyState message={isHost ? "No tasks yet." : "No tasks assigned yet."} action={isHost ? taskCreationMenu() : <Button component={Link} to="/me/questions">Ask a question</Button>} />}
     <BulkTaskImportModal opened={importOpen} onClose={() => setImportOpen(false)} />
   </Layout>;
 }

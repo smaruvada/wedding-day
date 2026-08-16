@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Router } from "express";
 import multer from "multer";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { signToken } from "./auth.js";
 import { db } from "./db/index.js";
@@ -20,6 +20,13 @@ import { storage } from "./storage.js";
 import { AuthUser } from "./types.js";
 const urgency = z.enum(["low", "medium", "high", "urgent"]);
 const hostRoles = ["host", "admin"] as const;
+const isMemberView = (req: any) =>
+  req.user!.role === "member" ||
+  (req.user!.role === "host" && req.get("X-App-View") === "member");
+const requireMemberView = (req: any, res: any, next: any) =>
+  isMemberView(req)
+    ? next()
+    : res.status(403).json({ error: "Switch to member view to do that" });
 const password = z
   .string()
   .min(8)
@@ -95,13 +102,17 @@ async function hydrateTask(task: typeof tasks.$inferSelect) {
     ).length,
   };
 }
-async function loadTaskForUser(taskId: number, user: AuthUser) {
+async function loadTaskForUser(
+  taskId: number,
+  user: AuthUser,
+  memberView = user.role === "member",
+) {
   const [task] = await db
     .select()
     .from(tasks)
     .where(and(eq(tasks.id, taskId), eq(tasks.eventId, user.eventId)))
     .limit(1);
-  if (!task || (user.role === "member" && task.assignedToUserId !== user.id))
+  if (!task || (memberView && task.assignedToUserId !== user.id))
     return null;
   return task;
 }
@@ -232,7 +243,7 @@ taskRouter.post("/", requireRole(...hostRoles), async (req, res) => {
         and(
           eq(users.id, input.assignedToUserId),
           eq(users.eventId, req.user!.eventId),
-          eq(users.role, "member"),
+          inArray(users.role, ["member", "host"]),
         ),
       )
       .limit(1);
@@ -296,7 +307,7 @@ taskRouter.post("/import", requireRole(...hostRoles), async (req, res) => {
 });
 taskRouter.get("/", async (req, res) => {
   const where =
-    req.user!.role !== "member"
+    !isMemberView(req)
       ? eq(tasks.eventId, req.user!.eventId)
       : and(
           eq(tasks.eventId, req.user!.eventId),
@@ -314,13 +325,13 @@ taskRouter.get("/", async (req, res) => {
   res.json({ tasks: await Promise.all(rows.map(hydrateTask)) });
 });
 taskRouter.get("/:taskId", async (req, res) => {
-  const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+  const task = await loadTaskForUser(Number(req.params.taskId), req.user!, isMemberView(req));
   if (!task) return res.status(404).json({ error: "Task not found" });
   res.json({ task: await hydrateTask(task) });
 });
 taskRouter.patch("/:taskId", requireRole(...hostRoles), async (req, res) => {
   try {
-    const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+    const task = await loadTaskForUser(Number(req.params.taskId), req.user!, isMemberView(req));
     if (!task) return res.status(404).json({ error: "Task not found" });
     const input = z
       .object({
@@ -393,7 +404,7 @@ taskRouter.patch("/:taskId", requireRole(...hostRoles), async (req, res) => {
 });
 taskRouter.delete("/:taskId", requireRole(...hostRoles), async (req, res) => {
   try {
-    const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+    const task = await loadTaskForUser(Number(req.params.taskId), req.user!, isMemberView(req));
     if (!task) return res.status(404).json({ error: "Task not found" });
     const photos = await db
       .select({ filePath: taskPhotos.filePath })
@@ -413,7 +424,7 @@ taskRouter.delete("/:taskId", requireRole(...hostRoles), async (req, res) => {
   }
 });
 taskRouter.post("/:taskId/subtasks/:subtaskId/complete", async (req, res) => {
-  const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+  const task = await loadTaskForUser(Number(req.params.taskId), req.user!, isMemberView(req));
   if (!task)
     return res.status(403).json({ error: "You cannot update this task" });
   const [subtask] = await db
@@ -441,10 +452,10 @@ taskRouter.post("/:taskId/subtasks/:subtaskId/complete", async (req, res) => {
 });
 taskRouter.post(
   "/:taskId/photos",
-  requireRole("member"),
+  requireMemberView,
   upload.single("photo"),
   async (req, res) => {
-    const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+    const task = await loadTaskForUser(Number(req.params.taskId), req.user!, isMemberView(req));
     if (!task)
       return res.status(403).json({ error: "You cannot upload for this task" });
     if (!req.file)
@@ -463,7 +474,7 @@ taskRouter.post(
   },
 );
 taskRouter.delete("/:taskId/photos/:photoId", async (req, res) => {
-  const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+  const task = await loadTaskForUser(Number(req.params.taskId), req.user!, isMemberView(req));
   if (!task)
     return res.status(403).json({ error: "You cannot delete this photo" });
   const [photo] = await db
@@ -477,7 +488,7 @@ taskRouter.delete("/:taskId/photos/:photoId", async (req, res) => {
     )
     .limit(1);
   if (!photo) return res.status(404).json({ error: "Photo not found" });
-  if (req.user!.role === "member" && photo.uploadedByUserId !== req.user!.id)
+  if (isMemberView(req) && photo.uploadedByUserId !== req.user!.id)
     return res
       .status(403)
       .json({ error: "You can only delete your own photos" });
@@ -491,7 +502,7 @@ taskRouter.post(
   requireRole(...hostRoles),
   async (req, res) => {
     try {
-      const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
+      const task = await loadTaskForUser(Number(req.params.taskId), req.user!, isMemberView(req));
       if (!task) return res.status(404).json({ error: "Task not found" });
       const input = z
         .object({ assignedToUserId: z.number().int() })
@@ -503,7 +514,7 @@ taskRouter.post(
           and(
             eq(users.id, input.assignedToUserId),
             eq(users.eventId, req.user!.eventId),
-            eq(users.role, "member"),
+            inArray(users.role, ["member", "host"]),
           ),
         )
         .limit(1);
@@ -527,7 +538,7 @@ taskRouter.post(
 );
 export const questionRouter = Router();
 questionRouter.use(requireAuth);
-questionRouter.post("/", requireRole("member"), async (req, res) => {
+questionRouter.post("/", requireMemberView, async (req, res) => {
   try {
     const input = z
       .object({
@@ -536,7 +547,7 @@ questionRouter.post("/", requireRole("member"), async (req, res) => {
         urgency: urgency.default("low"),
       })
       .parse(req.body);
-    const task = await loadTaskForUser(input.taskId, req.user!);
+    const task = await loadTaskForUser(input.taskId, req.user!, isMemberView(req));
     if (!task)
       return res
         .status(403)
@@ -556,7 +567,7 @@ questionRouter.post("/", requireRole("member"), async (req, res) => {
 });
 questionRouter.get("/", async (req, res) => {
   const visibility =
-    req.user!.role !== "member"
+    !isMemberView(req)
       ? eq(questions.eventId, req.user!.eventId)
       : and(
           eq(questions.eventId, req.user!.eventId),
@@ -583,7 +594,7 @@ questionRouter.get("/", async (req, res) => {
 });
 questionRouter.post(
   "/:questionId/photos",
-  requireRole("member"),
+  requireMemberView,
   upload.single("photo"),
   async (req, res) => {
     const [question] = await db
@@ -615,7 +626,7 @@ questionRouter.post(
     res.status(201).json({ photo });
   },
 );
-questionRouter.delete("/photos/:photoId", async (req, res) => {
+questionRouter.delete("/photos/:photoId", requireMemberView, async (req, res) => {
   const [photo] = await db
     .select()
     .from(questionPhotos)
@@ -633,7 +644,7 @@ questionRouter.delete("/photos/:photoId", async (req, res) => {
     )
     .limit(1);
   if (!question) return res.status(404).json({ error: "Question not found" });
-  if (req.user!.role === "member" && question.askedByUserId !== req.user!.id)
+  if (question.askedByUserId !== req.user!.id)
     return res
       .status(403)
       .json({ error: "You can only delete photos from your own questions" });
@@ -643,7 +654,7 @@ questionRouter.delete("/photos/:photoId", async (req, res) => {
 });
 questionRouter.delete(
   "/:questionId",
-  requireRole("member"),
+  requireMemberView,
   async (req, res) => {
     const [question] = await db
       .select()
@@ -668,7 +679,7 @@ questionRouter.delete(
 );
 questionRouter.patch(
   "/:questionId",
-  requireRole("member"),
+  requireMemberView,
   async (req, res) => {
     try {
       const input = z.object({ content: z.string().min(1) }).parse(req.body);
@@ -752,7 +763,7 @@ memberRouter.get("/", async (req, res) =>
       .select({ id: users.id, name: users.name, email: users.email })
       .from(users)
       .where(
-        and(eq(users.eventId, req.user!.eventId), eq(users.role, "member")),
+        and(eq(users.eventId, req.user!.eventId), inArray(users.role, ["member", "host"])),
       ),
   }),
 );

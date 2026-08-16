@@ -72,7 +72,9 @@ export function QuestionCard({
 
 export function QuestionsPage() {
   const user = useAuthStore((state) => state.user)!;
-  const isHost = user.role !== "member";
+  const viewMode = useAuthStore((state) => state.viewMode);
+  const isHost = user.role !== "member" && viewMode === "host";
+  const isMemberView = !isHost;
   const client = useQueryClient();
   const query = useQuery({
     queryKey: ["questions"],
@@ -81,7 +83,7 @@ export function QuestionsPage() {
   const tasks = useQuery({
     queryKey: ["tasks"],
     queryFn: taskApi.list,
-    enabled: user.role === "member",
+    enabled: isMemberView,
   });
   const [open, setOpen] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -130,7 +132,7 @@ export function QuestionsPage() {
     <Layout>
       <Group justify="space-between" mb="lg">
         <Title className="list-page-heading">{isHost ? "Questions" : "My Questions"}</Title>
-        {user.role === "member" && (
+        {isMemberView && (
           <Button onClick={() => setOpen(true)}>Ask host</Button>
         )}
       </Group>
@@ -148,12 +150,12 @@ export function QuestionsPage() {
                 updateUrgency.mutate({ id, urgency })
               }
               onEdit={
-                user.role === "member"
+                isMemberView
                   ? (content) => edit.mutate({ id: question.id, content })
                   : undefined
               }
               onDelete={
-                user.role === "member"
+                isMemberView
                   ? () => remove.mutate(question.id)
                   : undefined
               }

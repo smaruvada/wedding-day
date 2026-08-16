@@ -1,12 +1,13 @@
 import { AppShell, Badge, Button, Container, Group, Menu, Title } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReactNode } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { questionApi } from "../api";
 import { useAuthStore } from "../store";
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { user, clear } = useAuthStore();
+  const { user, clear, viewMode, setViewMode } = useAuthStore();
+  const client = useQueryClient();
   const questions = useQuery({
     queryKey: ["questions"],
     queryFn: questionApi.list,
@@ -15,7 +16,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  const isHostView = user.role !== "member";
+  const isHostView = user.role !== "member" && viewMode === "host";
   const taskPath = isHostView ? "/host/tasks" : "/me/tasks";
   const openQuestionCount = questions.data?.questions.length ?? 0;
 
@@ -41,6 +42,9 @@ export function Layout({ children }: { children: ReactNode }) {
               <Button className="account-menu-button" variant="subtle">{user.name}</Button>
             </Menu.Target>
             <Menu.Dropdown>
+              {user.role === "host" && <Menu.Item component={Link} to={isHostView ? "/me/tasks" : "/host/tasks"} onClick={() => { setViewMode(isHostView ? "member" : "host"); client.clear(); }}>
+                Switch to {isHostView ? "member" : "host"} view
+              </Menu.Item>}
               <Menu.Item component={Link} to="/profile">Profile</Menu.Item>
               <Menu.Item onClick={clear}>Log out</Menu.Item>
             </Menu.Dropdown>

@@ -2,10 +2,12 @@ import { Button, Card, FileButton, Group, Modal, Text } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { questionApi, taskApi } from "../api";
+import { useAuthStore } from "../store";
 import { Photo, Task, User } from "../types";
 import { ErrorBox } from "./feedback";
 
 export function TaskPhotos({ task, user }: { task: Task; user: Pick<User, "role"> }) {
+  const viewMode = useAuthStore((state) => state.viewMode);
   const client = useQueryClient();
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const upload = useMutation({ mutationFn: (file: File) => taskApi.upload(task.id, file), onSuccess: () => client.invalidateQueries({ queryKey: ["task", String(task.id)] }) });
@@ -19,7 +21,7 @@ export function TaskPhotos({ task, user }: { task: Task; user: Pick<User, "role"
       <Button color="red" variant="subtle" size="xs" onClick={() => remove.mutate(photo.id)} loading={remove.isPending}>Delete</Button>
     </div>)}</Group>
     {!task.photos.length && <Text size="sm" c="dimmed" mt="sm">No completion photos uploaded.</Text>}
-    {user.role === "member" && <FileButton onChange={(file) => file && upload.mutate(file)} accept="image/*">{(props) => <Button {...props} mt="sm" loading={upload.isPending}>Upload proof photo</Button>}</FileButton>}
+    {(user.role === "member" || viewMode === "member") && <FileButton onChange={(file) => file && upload.mutate(file)} accept="image/*">{(props) => <Button {...props} mt="sm" loading={upload.isPending}>Upload proof photo</Button>}</FileButton>}
     <Modal opened={!!selectedPhoto} onClose={() => setSelectedPhoto(null)} title="Completion photo" size="lg"><img className="expanded-photo" src={selectedPhoto ?? ""} alt="Expanded completion proof" /></Modal>
   </Card>;
 }

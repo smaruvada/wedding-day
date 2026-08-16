@@ -128,9 +128,10 @@ function AuthPage({ register = false }: { register?: boolean }) {
 }
 function Home() {
   const user = useAuthStore((state) => state.user);
+  const viewMode = useAuthStore((state) => state.viewMode);
   return (
     <Navigate
-      to={user?.role !== "member" ? "/host/tasks" : "/me/tasks"}
+      to={user?.role !== "member" && viewMode === "host" ? "/host/tasks" : "/me/tasks"}
       replace
     />
   );

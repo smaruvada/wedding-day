@@ -15,7 +15,8 @@ export function TaskDetailPage() {
   const { taskId = "" } = useParams();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user)!;
-  const isHost = user.role !== "member";
+  const viewMode = useAuthStore((state) => state.viewMode);
+  const isHost = user.role !== "member" && viewMode === "host";
   const client = useQueryClient();
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(
     null,
@@ -166,7 +167,7 @@ export function TaskDetailPage() {
                 </Badge>
               </Group>
             </div>
-            {user.role === "member" && (
+            {!isHost && (
               <RelatedQuestionMemberActions
                 question={question}
                 taskId={taskId}
