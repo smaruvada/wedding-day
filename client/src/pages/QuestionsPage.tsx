@@ -169,14 +169,10 @@ export function QuestionsPage() {
           message={
             isHost ? "No questions yet." : "No questions yet."
           }
-          description={isHost ? undefined : "If you're stuck, ask a question!"}
-          action={
-            isHost ? (
-              <Button component={Link} to="/host/tasks/new">
-                Create task
-              </Button>
-            ) : undefined
+          description={
+            isHost ? "It's all moving smoothly!" : "If you're stuck, ask a question!"
           }
+          action={undefined}
         />
       )}
       <Modal opened={open} onClose={() => setOpen(false)} title="Ask the hosts">

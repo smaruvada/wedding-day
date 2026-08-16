@@ -183,7 +183,18 @@ export function TaskListPage({ host = false }: { host?: boolean }) {
       <EmptyState
         message={isHost ? "No tasks yet." : "No tasks assigned yet."}
         description={isHost ? undefined : "Look out for your first task!"}
-        action={isHost ? taskCreationMenu() : undefined}
+        action={
+          isHost ? (
+            <Group gap="xs">
+              <Button component={Link} to="/host/tasks/new">
+                Create task
+              </Button>
+              <Button variant="light" onClick={() => setImportOpen(true)}>
+                Add task list
+              </Button>
+            </Group>
+          ) : undefined
+        }
       />}
     <BulkTaskImportModal opened={importOpen} onClose={() => setImportOpen(false)} />
   </Layout>;
