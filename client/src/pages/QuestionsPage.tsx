@@ -72,6 +72,7 @@ export function QuestionCard({
 
 export function QuestionsPage() {
   const user = useAuthStore((state) => state.user)!;
+  const isHost = user.role !== "member";
   const client = useQueryClient();
   const query = useQuery({
     queryKey: ["questions"],
@@ -128,7 +129,7 @@ export function QuestionsPage() {
   return (
     <Layout>
       <Group justify="space-between" mb="lg">
-        <Title>{user.role === "host" ? "All Questions" : "My Questions"}</Title>
+        <Title>{isHost ? "All Questions" : "My Questions"}</Title>
         {user.role === "member" && (
           <Button onClick={() => setOpen(true)}>Ask host</Button>
         )}
@@ -139,7 +140,7 @@ export function QuestionsPage() {
             <QuestionCard
               key={question.id}
               question={question}
-              isHost={user.role === "host"}
+              isHost={isHost}
               onStatusChange={(id, status, answerText) =>
                 update.mutate({ id, status, answerText })
               }
@@ -162,10 +163,10 @@ export function QuestionsPage() {
       ) : (
         <EmptyState
           message={
-            user.role === "host" ? "No questions yet." : "No questions yet."
+            isHost ? "No questions yet." : "No questions yet."
           }
           action={
-            user.role === "host" ? (
+            isHost ? (
               <Button component={Link} to="/host/tasks/new">
                 Create task
               </Button>

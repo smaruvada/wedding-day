@@ -106,3 +106,10 @@ export const questionApi = {
     return data(api.post(`/questions/${id}/photos`, form));
   },
 };
+export const adminApi = {
+  users: () => data<{ users: Array<User & { createdAt: string }> }>(api.get("/admin/users")),
+  createUser: (payload: object) =>
+    data<{ user: User }>(api.post("/admin/users", payload)),
+  updateUser: (id: number, payload: object) =>
+    data<{ user: User }>(api.patch(`/admin/users/${id}`, payload)),
+};

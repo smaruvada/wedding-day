@@ -5,6 +5,7 @@ import cors from "cors";
 import { pool } from "./db/index.js";
 import {
   authRouter,
+  adminRouter,
   memberRouter,
   questionRouter,
   taskRouter,
@@ -42,6 +43,7 @@ app.use("/auth", authRouter);
 app.use("/tasks", taskRouter);
 app.use("/questions", questionRouter);
 app.use("/members", memberRouter);
+app.use("/admin", adminRouter);
 if (process.env.NODE_ENV === "production") {
   const clientDir = path.resolve("client/dist");
   app.use(express.static(clientDir));

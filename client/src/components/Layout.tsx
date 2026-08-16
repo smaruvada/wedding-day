@@ -15,7 +15,8 @@ export function Layout({ children }: { children: ReactNode }) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  const taskPath = user.role === "host" ? "/host/tasks" : "/me/tasks";
+  const isHostView = user.role !== "member";
+  const taskPath = isHostView ? "/host/tasks" : "/me/tasks";
   const openQuestionCount = questions.data?.questions.length ?? 0;
 
   return (
@@ -30,9 +31,10 @@ export function Layout({ children }: { children: ReactNode }) {
               </Title>
             </Link>
             <Button component={Link} to={taskPath} variant="subtle">Tasks</Button>
-            <Button component={Link} to={user.role === "host" ? "/host/questions" : "/me/questions"} variant="subtle">
+            <Button component={Link} to={isHostView ? "/host/questions" : "/me/questions"} variant="subtle">
               Questions&nbsp; <Badge size="sm" circle>{openQuestionCount}</Badge>
             </Button>
+            {user.role === "admin" && <Button component={Link} to="/admin/users" variant="subtle">Users</Button>}
           </Group>
           <Menu position="bottom-end">
             <Menu.Target>

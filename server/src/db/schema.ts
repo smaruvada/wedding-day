@@ -8,7 +8,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-export const roleEnum = pgEnum("role", ["member", "host"]);
+export const roleEnum = pgEnum("role", ["member", "host", "admin"]);
 export const hostTypeEnum = pgEnum("host_type", [
   "bride",
   "maid_of_honor",

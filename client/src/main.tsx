@@ -55,6 +55,7 @@ import { TaskListPage } from "./pages/TaskListPage";
 import { QuestionsPage } from "./pages/QuestionsPage";
 import { TaskDetailPage } from "./pages/TaskDetailPage";
 import { TaskFormPage } from "./pages/TaskFormPage";
+import { AdminUsersPage } from "./pages/AdminUsersPage";
 import { useAuthStore } from "./store";
 import { Question, Task } from "./types";
 import { weddingTheme } from "./theme";
@@ -75,7 +76,7 @@ function AuthPage({ register = false }: { register?: boolean }) {
           ),
     onSuccess: ({ token, user }) => {
       setAuth(token, user);
-      navigate(user.role === "host" ? "/host/tasks" : "/me/tasks");
+      navigate(user.role !== "member" ? "/host/tasks" : "/me/tasks");
     },
     onError: (requestError: any) =>
       setError(requestError.response?.data?.error ?? "Unable to authenticate"),
@@ -101,7 +102,7 @@ function AuthPage({ register = false }: { register?: boolean }) {
                 <TextInput required name="name" label="Name" />
               </>
             )}
-            <TextInput required name="email" type="email" label="Email" />
+            <TextInput required name="email" type={register ? "email" : "text"} label={register ? "Email" : "Email or username"} />
             <PasswordInput
               required
               name="password"
@@ -127,7 +128,7 @@ function Home() {
   const user = useAuthStore((state) => state.user);
   return (
     <Navigate
-      to={user?.role === "host" ? "/host/tasks" : "/me/tasks"}
+      to={user?.role !== "member" ? "/host/tasks" : "/me/tasks"}
       replace
     />
   );
@@ -135,6 +136,10 @@ function Home() {
 function RequireAuth({ children }: { children: ReactNode }) {
   const { token, user } = useAuthStore();
   return token && user ? <>{children}</> : <Navigate to="/login" replace />;
+}
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const user = useAuthStore((state) => state.user);
+  return user?.role === "admin" ? <>{children}</> : <Navigate to="/" replace />;
 }
 function App() {
   return (
@@ -196,6 +201,10 @@ function App() {
             <QuestionsPage />
           </RequireAuth>
         }
+      />
+      <Route
+        path="/admin/users"
+        element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>}
       />
       <Route path="*" element={<Home />} />
     </Routes>

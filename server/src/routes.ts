@@ -19,6 +19,7 @@ import { calculateTaskStatus } from "./services/completion.js";
 import { storage } from "./storage.js";
 import { AuthUser } from "./types.js";
 const urgency = z.enum(["low", "medium", "high", "urgent"]);
+const hostRoles = ["host", "admin"] as const;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024, files: 1 },
@@ -153,7 +154,7 @@ authRouter.post("/register", async (req, res) => {
 authRouter.post("/login", async (req, res) => {
   try {
     const input = z
-      .object({ email: z.string().email(), password: z.string() })
+      .object({ email: z.string().min(1), password: z.string() })
       .parse(req.body);
     const [user] = await db
       .select()
@@ -171,7 +172,7 @@ authRouter.post("/login", async (req, res) => {
 authRouter.get("/me", requireAuth, (req, res) => res.json({ user: req.user }));
 export const taskRouter = Router();
 taskRouter.use(requireAuth);
-taskRouter.post("/", requireRole("host"), async (req, res) => {
+taskRouter.post("/", requireRole(...hostRoles), async (req, res) => {
   try {
     const input = z
       .object({
@@ -221,7 +222,7 @@ taskRouter.post("/", requireRole("host"), async (req, res) => {
     fail(res, error);
   }
 });
-taskRouter.post("/import", requireRole("host"), async (req, res) => {
+taskRouter.post("/import", requireRole(...hostRoles), async (req, res) => {
   try {
     const input = z
       .object({
@@ -247,7 +248,7 @@ taskRouter.post("/import", requireRole("host"), async (req, res) => {
 });
 taskRouter.get("/", async (req, res) => {
   const where =
-    req.user!.role === "host"
+    req.user!.role !== "member"
       ? eq(tasks.eventId, req.user!.eventId)
       : and(
           eq(tasks.eventId, req.user!.eventId),
@@ -269,7 +270,7 @@ taskRouter.get("/:taskId", async (req, res) => {
   if (!task) return res.status(404).json({ error: "Task not found" });
   res.json({ task: await hydrateTask(task) });
 });
-taskRouter.patch("/:taskId", requireRole("host"), async (req, res) => {
+taskRouter.patch("/:taskId", requireRole(...hostRoles), async (req, res) => {
   try {
     const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
     if (!task) return res.status(404).json({ error: "Task not found" });
@@ -342,7 +343,7 @@ taskRouter.patch("/:taskId", requireRole("host"), async (req, res) => {
     fail(res, error);
   }
 });
-taskRouter.delete("/:taskId", requireRole("host"), async (req, res) => {
+taskRouter.delete("/:taskId", requireRole(...hostRoles), async (req, res) => {
   try {
     const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
     if (!task) return res.status(404).json({ error: "Task not found" });
@@ -439,7 +440,7 @@ taskRouter.delete("/:taskId/photos/:photoId", async (req, res) => {
 });
 taskRouter.post(
   "/:taskId/redelegate",
-  requireRole("host"),
+  requireRole(...hostRoles),
   async (req, res) => {
     try {
       const task = await loadTaskForUser(Number(req.params.taskId), req.user!);
@@ -507,7 +508,7 @@ questionRouter.post("/", requireRole("member"), async (req, res) => {
 });
 questionRouter.get("/", async (req, res) => {
   const visibility =
-    req.user!.role === "host"
+    req.user!.role !== "member"
       ? eq(questions.eventId, req.user!.eventId)
       : and(
           eq(questions.eventId, req.user!.eventId),
@@ -644,7 +645,7 @@ questionRouter.patch(
 );
 questionRouter.post(
   "/:questionId/status",
-  requireRole("host"),
+  requireRole(...hostRoles),
   async (req, res) => {
     try {
       const input = z
@@ -673,7 +674,7 @@ questionRouter.post(
 );
 questionRouter.post(
   "/:questionId/urgency",
-  requireRole("host"),
+  requireRole(...hostRoles),
   async (req, res) => {
     try {
       const input = z.object({ urgency }).parse(req.body);
@@ -696,7 +697,7 @@ questionRouter.post(
   },
 );
 export const memberRouter = Router();
-memberRouter.use(requireAuth, requireRole("host"));
+memberRouter.use(requireAuth, requireRole(...hostRoles));
 memberRouter.get("/", async (req, res) =>
   res.json({
     users: await db
@@ -707,3 +708,90 @@ memberRouter.get("/", async (req, res) =>
       ),
   }),
 );
+
+const hostType = z.enum(["bride", "maid_of_honor", "planner", "other"]);
+const adminUser = (user: typeof users.$inferSelect) => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  hostType: user.hostType,
+  eventId: user.eventId,
+  createdAt: user.createdAt,
+});
+
+export const adminRouter = Router();
+adminRouter.use(requireAuth, requireRole("admin"));
+adminRouter.get("/users", async (_req, res) =>
+  res.json({
+    users: (await db.select().from(users).orderBy(asc(users.name))).map(adminUser),
+  }),
+);
+adminRouter.post("/users", async (req, res) => {
+  try {
+    const input = z
+      .object({
+        name: z.string().trim().min(1),
+        email: z.string().trim().min(1),
+        password: z.string().min(8),
+        role: z.enum(["member", "host"]),
+        hostType: hostType.optional(),
+      })
+      .parse(req.body);
+    if (input.role === "host" && !input.hostType)
+      throw new Error("Host type is required for hosts");
+    const [user] = await db
+      .insert(users)
+      .values({
+        name: input.name,
+        email: input.email,
+        passwordHash: await bcrypt.hash(input.password, 12),
+        role: input.role,
+        hostType: input.role === "host" ? input.hostType : null,
+        eventId: req.user!.eventId,
+      })
+      .returning();
+    res.status(201).json({ user: adminUser(user) });
+  } catch (error) {
+    fail(res, error);
+  }
+});
+adminRouter.patch("/users/:userId", async (req, res) => {
+  try {
+    const input = z
+      .object({
+        name: z.string().trim().min(1).optional(),
+        email: z.string().trim().min(1).optional(),
+        password: z.string().min(8).optional(),
+        role: z.enum(["member", "host", "admin"]).optional(),
+        hostType: hostType.nullable().optional(),
+      })
+      .parse(req.body);
+    const [existing] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, Number(req.params.userId)))
+      .limit(1);
+    if (!existing) return res.status(404).json({ error: "User not found" });
+    const role = input.role ?? existing.role;
+    const selectedHostType = role === "host" ? (input.hostType ?? existing.hostType) : null;
+    if (role === "host" && !selectedHostType)
+      throw new Error("Host type is required for hosts");
+    const [user] = await db
+      .update(users)
+      .set({
+        name: input.name ?? existing.name,
+        email: input.email ?? existing.email,
+        role,
+        hostType: selectedHostType,
+        ...(input.password
+          ? { passwordHash: await bcrypt.hash(input.password, 12) }
+          : {}),
+      })
+      .where(eq(users.id, existing.id))
+      .returning();
+    res.json({ user: adminUser(user) });
+  } catch (error) {
+    fail(res, error);
+  }
+});

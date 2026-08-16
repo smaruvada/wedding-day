@@ -15,6 +15,7 @@ export function TaskDetailPage() {
   const { taskId = "" } = useParams();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user)!;
+  const isHost = user.role !== "member";
   const client = useQueryClient();
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(
     null,
@@ -31,7 +32,7 @@ export function TaskDetailPage() {
   const members = useQuery({
     queryKey: ["members"],
     queryFn: taskApi.members,
-    enabled: user.role === "host",
+    enabled: isHost,
   });
   const complete = useMutation({
     mutationFn: (subtaskId: number) =>
@@ -86,7 +87,7 @@ export function TaskDetailPage() {
       </Layout>
     );
   const task = query.data!.task;
-  const taskListPath = user.role === "host" ? "/host/tasks" : "/me/tasks";
+  const taskListPath = isHost ? "/host/tasks" : "/me/tasks";
   const selectedQuestion = task.relatedQuestions?.find(
     (question) => question.id === selectedQuestionId,
   );
@@ -101,7 +102,7 @@ export function TaskDetailPage() {
     setAnswerText(question.answerText ?? "");
   };
   const itemsSection =
-    user.role === "host" ? (
+    isHost ? (
       <Card withBorder mt="xl">
         <Title order={3}>Items</Title>
         <SubtaskEditor
@@ -141,14 +142,14 @@ export function TaskDetailPage() {
             role="button"
             tabIndex={0}
             onClick={() =>
-              user.role === "host"
+              isHost
                 ? openQuestion(question)
                 : setEditingQuestionId(question.id)
             }
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                user.role === "host"
+                isHost
                   ? openQuestion(question)
                   : setEditingQuestionId(question.id);
               }
@@ -192,7 +193,7 @@ export function TaskDetailPage() {
           </Button>
           <Title>{task.title}</Title>
         </Group>
-        {user.role === "host" && (
+        {isHost && (
           <Group gap="xs" wrap="nowrap">
             <Button
               color="light"
@@ -216,7 +217,7 @@ export function TaskDetailPage() {
       <Badge color={task.status === "completed" ? "green" : "gray"}>
         {task.status}
       </Badge>
-      {user.role === "host" && (
+      {isHost && (
         <Select
           mt="md"
           label="Assign to"

@@ -1,4 +1,4 @@
-export type Role = "member" | "host";
+export type Role = "member" | "host" | "admin";
 export type Urgency = "low" | "medium" | "high" | "urgent";
 export interface User {
   id: number;
