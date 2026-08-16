@@ -42,7 +42,7 @@ The production container serves the built React client and API from one origin o
    curl http://127.0.0.1:3001/healthz
    ```
 
-The `postgres_data` and `uploads` Docker volumes must be included in backups. Before upgrading, back up both volumes and review database migrations. Run `npm run db:seed` only for local/demo data; it is intentionally excluded from production startup.
+The `postgres_data` and `uploads` Docker volumes must be included in backups. Before upgrading, back up both volumes and review database migrations. Run `npm run db:seed` only for local/demo data. Seeding is intentionally excluded from production startup.
 
 ## Validation
 
