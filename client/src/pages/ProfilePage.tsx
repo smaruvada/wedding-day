@@ -71,7 +71,7 @@ export function ProfilePage() {
         <form onSubmit={submitPassword}>
           <Stack>
             <PasswordInput required name="currentPassword" label="Current password" />
-            <PasswordInput required name="newPassword" label="New password" minLength={8} description="At least 8 characters and one special character" />
+            <PasswordInput required name="newPassword" label="New password" minLength={8} description="At least 8 characters, with an uppercase letter, number, and special character" />
             <PasswordInput required name="confirmPassword" label="Confirm new password" minLength={8} />
             {passwordMutation.error && <Alert color="red">{(passwordMutation.error as any).response?.data?.error ?? "Unable to update password"}</Alert>}
             {success && <Alert color={success === "Password updated." ? "green" : "red"}>{success}</Alert>}

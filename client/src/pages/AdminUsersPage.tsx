@@ -33,7 +33,7 @@ function UserForm({ user, onClose }: { user?: AdminUser; onClose: () => void }) 
   return <form onSubmit={submit}><Stack>
     <TextInput required name="name" label="Name" defaultValue={user?.name} />
     <TextInput required name="email" label="Email or username" defaultValue={user?.email} />
-    <TextInput required={!user} name="password" type="password" label={user ? "New password (optional)" : "Password"} minLength={8} description="At least 8 characters and one special character" />
+    <TextInput required={!user} name="password" type="password" label={user ? "New password (optional)" : "Password"} minLength={8} description="At least 8 characters, with an uppercase letter, number, and special character" />
     <Select name="role" label="Role" value={role} onChange={(value) => setRole((value ?? "member") as User["role"])} data={user ? ["member", "host", "admin"] : ["member", "host"]} />
     {role === "host" && <Select required name="hostType" label="Host type" defaultValue={user?.hostType ?? undefined} data={hostTypes} />}
     {mutation.error && <ErrorBox error={mutation.error} />}
