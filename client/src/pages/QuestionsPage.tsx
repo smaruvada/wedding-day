@@ -133,7 +133,9 @@ export function QuestionsPage() {
       <Group justify="space-between" mb="lg">
         <Title className="list-page-heading">{isHost ? "Questions" : "My Questions"}</Title>
         {isMemberView && (
-          <Button onClick={() => setOpen(true)}>Ask host</Button>
+          <Button onClick={() => setOpen(true)} disabled={!tasks.data?.tasks.length}>
+            Ask host
+          </Button>
         )}
       </Group>
       {questions.length ? (
@@ -167,14 +169,13 @@ export function QuestionsPage() {
           message={
             isHost ? "No questions yet." : "No questions yet."
           }
+          description={isHost ? undefined : "If you're stuck, ask a question!"}
           action={
             isHost ? (
               <Button component={Link} to="/host/tasks/new">
                 Create task
               </Button>
-            ) : (
-              <Button onClick={() => setOpen(true)}>Ask a question</Button>
-            )
+            ) : undefined
           }
         />
       )}

@@ -28,16 +28,18 @@ export function Loading() {
 export function EmptyState({
   message,
   action,
+  description = "Start here to keep the wedding day moving smoothly.",
 }: {
   message: string;
   action: ReactNode;
+  description?: string;
 }) {
   return (
     <Card withBorder className="empty-state" role="status">
       <Stack align="center" gap="sm">
         <Text fw={600}>{message}</Text>
         <Text size="sm" c="dimmed" ta="center">
-          Start here to keep the wedding day moving smoothly.
+          {description}
         </Text>
         {action}
       </Stack>

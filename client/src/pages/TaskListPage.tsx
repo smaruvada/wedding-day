@@ -180,7 +180,11 @@ export function TaskListPage({ host = false }: { host?: boolean }) {
       <Select placeholder="Urgency" clearable data={["low", "medium", "high", "urgent"]} value={urgency} onChange={setUrgency} />
     </Group>}
     {tasks.length ? <SimpleGrid cols={{ base: 1, sm: 2 }}>{tasks.map((task) => <TaskCard key={task.id} task={task} host={isHost} />)}</SimpleGrid> :
-      <EmptyState message={isHost ? "No tasks yet." : "No tasks assigned yet."} action={isHost ? taskCreationMenu() : <Button component={Link} to="/me/questions">Ask a question</Button>} />}
+      <EmptyState
+        message={isHost ? "No tasks yet." : "No tasks assigned yet."}
+        description={isHost ? undefined : "Look out for your first task!"}
+        action={isHost ? taskCreationMenu() : undefined}
+      />}
     <BulkTaskImportModal opened={importOpen} onClose={() => setImportOpen(false)} />
   </Layout>;
 }
