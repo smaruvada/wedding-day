@@ -1,4 +1,4 @@
-import { Button, Card, FileButton, Group, Modal, Text } from "@mantine/core";
+import { Button, Card, Checkbox, FileButton, Group, Modal, Text } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { questionApi, taskApi } from "../api";
@@ -10,12 +10,23 @@ export function TaskPhotos({ task, user }: { task: Task; user: Pick<User, "role"
   const viewMode = useAuthStore((state) => state.viewMode);
   const client = useQueryClient();
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const isHost = user.role !== "member" && viewMode === "host";
   const upload = useMutation({ mutationFn: (file: File) => taskApi.upload(task.id, file), onSuccess: () => client.invalidateQueries({ queryKey: ["task", String(task.id)] }) });
   const remove = useMutation({ mutationFn: (photoId: number) => taskApi.removePhoto(task.id, photoId), onSuccess: () => client.invalidateQueries({ queryKey: ["task", String(task.id)] }) });
+  const updatePhotoRequirement = useMutation({
+    mutationFn: (photoRequired: boolean) => taskApi.update(task.id, { photoRequired }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["task", String(task.id)] });
+      client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
 
   return <Card withBorder mt="xl">
-    <Text fw={600}>Photos {task.photoRequired && "(required)"}</Text>
-    {(upload.error || remove.error) && <ErrorBox error={upload.error ?? remove.error} />}
+    <Group justify="space-between" align="center">
+      <Text fw={600}>Photos {task.photoRequired && "(required)"}</Text>
+      {isHost && <Checkbox label="Require completion photo" checked={task.photoRequired} disabled={updatePhotoRequirement.isPending} onChange={(event) => updatePhotoRequirement.mutate(event.currentTarget.checked)} />}
+    </Group>
+    {(upload.error || remove.error || updatePhotoRequirement.error) && <ErrorBox error={upload.error ?? remove.error ?? updatePhotoRequirement.error} />}
     <Group mt="md">{task.photos.map((photo) => <div key={photo.id} className="task-photo">
       <button type="button" className="photo-preview-button" onClick={() => setSelectedPhoto(photo.filePath)}><img src={photo.filePath} alt="Completion proof" /></button>
       <Button color="red" variant="subtle" size="xs" onClick={() => remove.mutate(photo.id)} loading={remove.isPending}>Delete</Button>

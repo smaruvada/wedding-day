@@ -10,9 +10,11 @@ export type EditableSubtask = {
 export function SubtaskEditor({
   task,
   onSave,
+  compactAddButton = false,
 }: {
   task: Task;
   onSave: (subtasks: EditableSubtask[]) => void;
+  compactAddButton?: boolean;
 }) {
   const [subtasks, setSubtasks] = useState<EditableSubtask[]>(
     task.subtasks.map(({ id, title }) => ({ id, title })),
@@ -36,7 +38,7 @@ export function SubtaskEditor({
     setEditingIndex(null);
   };
   return (
-    <Stack mt="md">
+    <Stack mt={compactAddButton ? "xs" : "md"}>
       {subtasks.map((subtask, index) =>
         editingIndex === index ? (
           <Group key={subtask.id ?? `new-${index}`} align="end" wrap="nowrap">
@@ -63,11 +65,20 @@ export function SubtaskEditor({
           </Group>
         ),
       )}
-      <Button variant="light" onClick={() => {
-        setSubtasks((current) => [...current, { title: "" }]);
-        setEditingIndex(subtasks.length);
-      }}>
-        Add subtask
+      <Button
+        variant="light"
+        size={compactAddButton ? "xs" : undefined}
+        fw={compactAddButton ? 700 : undefined}
+        className={compactAddButton ? "subtask-add-button" : undefined}
+        style={compactAddButton ? { alignSelf: "flex-start" } : undefined}
+        onClick={() => {
+          setSubtasks((current) => [...current, { title: "" }]);
+          setEditingIndex(subtasks.length);
+        }}
+        aria-label="Add subtask"
+        title="Add subtask"
+      >
+        {compactAddButton ? "+" : "Add subtask"}
       </Button>
     </Stack>
   );

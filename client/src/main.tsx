@@ -191,14 +191,6 @@ function App() {
         }
       />
       <Route
-        path="/host/tasks/:taskId/edit"
-        element={
-          <RequireAuth>
-            <TaskFormPage edit />
-          </RequireAuth>
-        }
-      />
-      <Route
         path="/host/questions"
         element={
           <RequireAuth>

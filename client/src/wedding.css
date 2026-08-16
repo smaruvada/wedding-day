@@ -37,6 +37,14 @@ body {
   color: #6d3432;
 }
 
+.subtask-add-button {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+}
+
 :where(a, button, input, textarea, [role='button']):focus-visible {
   outline: 3px solid #2d4532;
   outline-offset: 3px;
@@ -322,6 +330,13 @@ a {
 
   .task-detail-heading .mantine-Title-root {
     font-size: 1.45rem;
+  }
+
+  .subtask-add-button {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
   }
 }
 

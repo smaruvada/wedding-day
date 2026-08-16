@@ -1,6 +1,6 @@
-import { Alert, Badge, Button, Card, Checkbox, Group, Modal, Select, Stack, Text, Textarea, Title } from "@mantine/core";
+import { Alert, Badge, Button, Card, Checkbox, Group, Menu, Modal, Select, Stack, Text, Textarea, TextInput, Title } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { questionApi, taskApi } from "../api";
 import { ErrorBox, Loading } from "../components/feedback";
@@ -26,6 +26,12 @@ export function TaskDetailPage() {
   );
   const [answerText, setAnswerText] = useState("");
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [title, setTitle] = useState("");
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [description, setDescription] = useState("");
+  const titleEditorRef = useRef<HTMLDivElement>(null);
+  const descriptionEditorRef = useRef<HTMLDivElement>(null);
   const query = useQuery({
     queryKey: ["task", taskId],
     queryFn: () => taskApi.get(taskId),
@@ -58,9 +64,35 @@ export function TaskDetailPage() {
       client.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
+  const titleMutation = useMutation({
+    mutationFn: (title: string) =>
+      taskApi.update(Number(taskId), { title: title.trim() }),
+    onSuccess: () => {
+      setEditingTitle(false);
+      client.invalidateQueries({ queryKey: ["task", taskId] });
+      client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+  const descriptionMutation = useMutation({
+    mutationFn: (description: string) =>
+      taskApi.update(Number(taskId), { description: description.trim() || null }),
+    onSuccess: () => {
+      setEditingDescription(false);
+      client.invalidateQueries({ queryKey: ["task", taskId] });
+      client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
   const assignmentMutation = useMutation({
     mutationFn: (assignedToUserId: number) =>
       taskApi.redelegate(Number(taskId), assignedToUserId),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["task", taskId] });
+      client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+  const urgencyMutation = useMutation({
+    mutationFn: (urgency: string) =>
+      taskApi.update(Number(taskId), { urgency }),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["task", taskId] });
       client.invalidateQueries({ queryKey: ["tasks"] });
@@ -82,6 +114,37 @@ export function TaskDetailPage() {
       client.invalidateQueries({ queryKey: ["questions"] });
     },
   });
+  useEffect(() => {
+    if (!editingTitle && !editingDescription) return;
+
+    const cancelOnClickAway = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        editingTitle &&
+        titleEditorRef.current &&
+        !titleEditorRef.current.contains(target) &&
+        !titleMutation.isPending
+      )
+        if (title.trim()) titleMutation.mutate(title);
+      if (
+        editingDescription &&
+        descriptionEditorRef.current &&
+        !descriptionEditorRef.current.contains(target) &&
+        !descriptionMutation.isPending
+      )
+        descriptionMutation.mutate(description);
+    };
+
+    document.addEventListener("mousedown", cancelOnClickAway);
+    return () => document.removeEventListener("mousedown", cancelOnClickAway);
+  }, [
+    description,
+    descriptionMutation,
+    editingDescription,
+    editingTitle,
+    title,
+    titleMutation,
+  ]);
   if (query.isLoading)
     return (
       <Layout>
@@ -217,7 +280,52 @@ export function TaskDetailPage() {
           >
             ←
           </Button>
-          <Title>{task.title}</Title>
+          {isHost && editingTitle ? (
+            <Group ref={titleEditorRef} gap="xs" wrap="nowrap">
+              <TextInput
+                value={title}
+                onChange={(event) => setTitle(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && title.trim())
+                    titleMutation.mutate(title);
+                }}
+                autoFocus
+                aria-label="Task title"
+              />
+              <Button
+                onClick={() => titleMutation.mutate(title)}
+                loading={titleMutation.isPending}
+                disabled={!title.trim()}
+                aria-label="Save title"
+                title="Save title"
+              >
+                ✓
+              </Button>
+              <Button
+                variant="light"
+                onClick={() => setEditingTitle(false)}
+                disabled={titleMutation.isPending}
+                aria-label="Cancel title edit"
+                title="Cancel"
+              >
+                ×
+              </Button>
+            </Group>
+          ) : (
+            <Title
+              className={isHost ? "subtask-display" : undefined}
+              onClick={
+                isHost
+                  ? () => {
+                      setTitle(task.title);
+                      setEditingTitle(true);
+                    }
+                  : undefined
+              }
+            >
+              {task.title}
+            </Title>
+          )}
         </Group>
         {isHost && (
           <Group gap="xs" wrap="nowrap">
@@ -229,21 +337,43 @@ export function TaskDetailPage() {
             >
               🗑
             </Button>
-            <Button
-              component={Link}
-              to={`/host/tasks/${task.id}/edit`}
-              aria-label="Edit task"
-              title="Edit task"
-            >
-              ✎
-            </Button>
           </Group>
         )}
       </Group>
       <Group justify="space-between" mt="sm">
-        <Badge color={task.status === "completed" ? "green" : "gray"}>
-          {task.status}
-        </Badge>
+        <Group gap="xs">
+          <Badge color={task.status === "completed" ? "green" : "gray"}>
+            {task.status}
+          </Badge>
+          {isHost && (
+            <Menu shadow="md" width={150}>
+              <Menu.Target>
+                <Button
+                  variant="transparent"
+                  p={0}
+                  h="auto"
+                  aria-label="Change urgency"
+                  title="Change urgency"
+                >
+                  <Badge color={urgencyColors[task.urgency]}>
+                    {task.urgency}
+                  </Badge>
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {(["low", "medium", "high", "urgent"] as const).map((urgency) => (
+                  <Menu.Item
+                    key={urgency}
+                    disabled={urgencyMutation.isPending}
+                    onClick={() => urgencyMutation.mutate(urgency)}
+                  >
+                    {urgency}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+          )}
+        </Group>
         {memberCompletionControl}
       </Group>
       {isHost && (
@@ -267,9 +397,56 @@ export function TaskDetailPage() {
         <Text size="sm" c="dimmed" mt="xs">Upload the required completion photo before marking this task complete.</Text>
       )}
       {assignmentMutation.error && <ErrorBox error={assignmentMutation.error} />}
-      <Text c="dimmed" my="md">
-        {task.description}
-      </Text>
+      {urgencyMutation.error && <ErrorBox error={urgencyMutation.error} />}
+      {titleMutation.error && <ErrorBox error={titleMutation.error} />}
+      {isHost && editingDescription ? (
+        <Stack ref={descriptionEditorRef} gap="xs" my="md">
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={(event) => setDescription(event.currentTarget.value)}
+            autosize
+            minRows={3}
+            autoFocus
+          />
+          <Group gap="xs">
+            <Button
+              onClick={() => descriptionMutation.mutate(description)}
+              loading={descriptionMutation.isPending}
+              aria-label="Save description"
+              title="Save description"
+            >
+              ✓
+            </Button>
+            <Button
+              variant="light"
+              onClick={() => setEditingDescription(false)}
+              disabled={descriptionMutation.isPending}
+              aria-label="Cancel description edit"
+              title="Cancel"
+            >
+              ×
+            </Button>
+          </Group>
+        </Stack>
+      ) : (
+        <Text
+          c="dimmed"
+          my="md"
+          className={isHost ? "subtask-display" : undefined}
+          onClick={
+            isHost
+              ? () => {
+                  setDescription(task.description ?? "");
+                  setEditingDescription(true);
+                }
+              : undefined
+          }
+        >
+          {task.description || (isHost ? "Add a description" : null)}
+        </Text>
+      )}
+      {descriptionMutation.error && <ErrorBox error={descriptionMutation.error} />}
       {task.openQuestionCount ? (
         <>
           {questionsSection}
