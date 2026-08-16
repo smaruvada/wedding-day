@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { questionApi } from "../api";
 import { RelatedQuestion } from "../types";
-import { urgencyColors } from "./QuestionUrgencyBadge";
+import { QuestionUrgencyBadge } from "./QuestionUrgencyBadge";
 import { QuestionPhotos } from "./photos";
 
 export function RelatedQuestionModal({
@@ -29,6 +29,14 @@ export function RelatedQuestionModal({
       client.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
+  const updateUrgency = useMutation({
+    mutationFn: (urgency: string) => questionApi.updateUrgency(question!.id, urgency),
+    onSuccess: () => {
+      onQuestionUpdated();
+      client.invalidateQueries({ queryKey: ["questions"] });
+      client.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
 
   return (
     <Modal opened={opened} onClose={onClose} title="Related question">
@@ -37,7 +45,7 @@ export function RelatedQuestionModal({
           <>
             <Text fw={600}>{question.content}</Text>
             <Group gap="xs">
-              <Badge color={urgencyColors[question.urgency]}>{question.urgency}</Badge>
+              <QuestionUrgencyBadge question={question} isHost onChange={(urgency) => updateUrgency.mutate(urgency)} />
               <Badge color={question.status === "resolved" ? "green" : "gray"}>{question.status}</Badge>
             </Group>
             {question.answerText && <Alert color="blue">{question.answerText}</Alert>}

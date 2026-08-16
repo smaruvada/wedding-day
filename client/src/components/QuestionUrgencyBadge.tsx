@@ -13,7 +13,7 @@ export function QuestionUrgencyBadge({
   isHost,
   onChange,
 }: {
-  question: Question;
+  question: Pick<Question, "urgency">;
   isHost: boolean;
   onChange: (urgency: string) => void;
 }) {
