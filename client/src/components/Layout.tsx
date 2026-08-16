@@ -26,8 +26,8 @@ export function Layout({ children }: { children: ReactNode }) {
           <Group className="app-primary-nav">
             <Link className="brand-link" to={taskPath}>
               <Title order={3}>
+                <span className="brand-icon">W</span>
                 <span className="brand-full">Wedding Day</span>
-                <span className="brand-mobile">W</span>
               </Title>
             </Link>
             <Button component={Link} to={taskPath} variant="subtle">Tasks</Button>

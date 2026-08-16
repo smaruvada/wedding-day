@@ -145,8 +145,29 @@ body {
   text-decoration: none;
 }
 
-.brand-mobile {
-  display: none;
+.brand-link .mantine-Title-root {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.brand-icon {
+  align-items: center;
+  background: #f9e8e4;
+  border: 1px solid #e7ada3;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px #fffaf7;
+  color: #87433f;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-family: "Snell Roundhand", "Apple Chancery", "URW Chancery L", cursive;
+  font-size: 1.8rem;
+  font-weight: 600;
+  height: 2.25rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0 0.08em 0.08em 0;
+  width: 2.25rem;
 }
 
 .subtask-input {
@@ -253,24 +274,6 @@ a {
 
   .brand-full {
     display: none;
-  }
-
-  .brand-mobile {
-    align-items: center;
-    background: #f9e8e4;
-    border: 1px solid #e7ada3;
-    border-radius: 50%;
-    box-shadow: inset 0 0 0 2px #fffaf7;
-    color: #87433f;
-    display: inline-flex;
-    font-family: "Snell Roundhand", "Apple Chancery", "URW Chancery L", cursive;
-    font-size: 1.8rem;
-    font-weight: 600;
-    height: 2.25rem;
-    justify-content: center;
-    line-height: 1;
-    padding: 0 0.08em 0.08em 0;
-    width: 2.25rem;
   }
 
   .app-primary-nav .mantine-Button-root,
