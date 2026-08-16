@@ -1,4 +1,5 @@
 import { Button, Group, Modal, Stack, Textarea } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { questionApi } from "../api";
@@ -21,11 +22,12 @@ export function MemberQuestionEditModal({ question, taskId, opened, onClose }: {
   </Stack></Modal>;
 }
 
-export function RelatedQuestionMemberActions({ question, taskId }: { question: { id: number }; taskId: string }) {
+export function RelatedQuestionMemberActions({ question, taskId }: { question: { id: number; status: "open" | "resolved" }; taskId: string }) {
   const client = useQueryClient();
   const remove = useMutation({ mutationFn: () => questionApi.remove(question.id), onSuccess: () => {
     client.invalidateQueries({ queryKey: ["task", taskId] });
     client.invalidateQueries({ queryKey: ["questions"] });
   }});
-  return <Button color="red" variant="subtle" size="xs" onClick={(event) => { event.stopPropagation(); remove.mutate(); }} loading={remove.isPending} aria-label="Delete question" title="Delete question">×</Button>;
+  if (question.status !== "open") return null;
+  return <Button color="red" variant="subtle" size="xs" onClick={(event) => { event.stopPropagation(); remove.mutate(); }} loading={remove.isPending} aria-label="Delete question" title="Delete question"><IconTrash size={16} stroke={1.8} /></Button>;
 }
