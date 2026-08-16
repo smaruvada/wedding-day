@@ -33,10 +33,15 @@ export function SubtaskEditor({
       ),
     );
   const save = (next: EditableSubtask[]) => {
-    setSubtasks(next);
-    onSave(next);
+    const savedSubtasks = next.filter((subtask) => subtask.title.trim());
+    setSubtasks(savedSubtasks);
+    onSave(savedSubtasks);
     setEditingIndex(null);
   };
+  const hasUnsavedNewSubtask =
+    editingIndex !== null && subtasks[editingIndex]?.id === undefined;
+  const hasBlankNewSubtask =
+    hasUnsavedNewSubtask && !subtasks[editingIndex]?.title.trim();
   return (
     <Stack mt={compactAddButton ? "xs" : "md"}>
       {subtasks.map((subtask, index) =>
@@ -61,7 +66,23 @@ export function SubtaskEditor({
           </Group>
         ) : (
           <Group key={subtask.id ?? `new-${index}`} gap="xs">
-            <Text className="subtask-display" onClick={() => setEditingIndex(index)}>{subtask.title}</Text>
+            <Text
+              className="subtask-display"
+              onClick={() => {
+                if (hasBlankNewSubtask && editingIndex !== null) {
+                  setSubtasks((current) =>
+                    current.filter((_, subtaskIndex) => subtaskIndex !== editingIndex),
+                  );
+                  setEditingIndex(
+                    editingIndex < index ? index - 1 : index,
+                  );
+                  return;
+                }
+                setEditingIndex(index);
+              }}
+            >
+              {subtask.title}
+            </Text>
           </Group>
         ),
       )}
@@ -72,9 +93,11 @@ export function SubtaskEditor({
         className={compactAddButton ? "subtask-add-button" : undefined}
         style={compactAddButton ? { alignSelf: "flex-start" } : undefined}
         onClick={() => {
+          if (hasUnsavedNewSubtask) return;
           setSubtasks((current) => [...current, { title: "" }]);
           setEditingIndex(subtasks.length);
         }}
+        disabled={hasUnsavedNewSubtask}
         aria-label="Add subtask"
         title="Add subtask"
       >
