@@ -12,7 +12,6 @@ import {
   MantineProvider,
   Modal,
   PasswordInput,
-  Select,
   SimpleGrid,
   Stack,
   Text,
@@ -88,8 +87,6 @@ function AuthPage({ register = false }: { register?: boolean }) {
       email: form.get("email"),
       password: form.get("password"),
       name: form.get("name"),
-      role: form.get("role") || "member",
-      hostType: form.get("hostType") || undefined,
     });
   };
   return (
@@ -102,20 +99,6 @@ function AuthPage({ register = false }: { register?: boolean }) {
             {register && (
               <>
                 <TextInput required name="name" label="Name" />
-                <Select
-                  name="role"
-                  label="Role"
-                  defaultValue="member"
-                  data={[
-                    { value: "member", label: "Wedding party member" },
-                    { value: "host", label: "Host" },
-                  ]}
-                />
-                <Select
-                  name="hostType"
-                  label="Host type (if host)"
-                  data={["bride", "maid_of_honor", "planner", "other"]}
-                />
               </>
             )}
             <TextInput required name="email" type="email" label="Email" />

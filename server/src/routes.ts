@@ -122,14 +122,8 @@ authRouter.post("/register", async (req, res) => {
         email: z.string().email(),
         password: z.string().min(8),
         name: z.string().min(1),
-        role: z.enum(["member", "host"]),
-        hostType: z
-          .enum(["bride", "maid_of_honor", "planner", "other"])
-          .optional(),
       })
       .parse(req.body);
-    if (input.role === "host" && !input.hostType)
-      throw new Error("Host type is required for hosts");
     const [event] = await db.select().from(events).limit(1);
     const targetEvent =
       event ??
@@ -146,7 +140,8 @@ authRouter.post("/register", async (req, res) => {
         ...input,
         passwordHash: hash,
         eventId: targetEvent.id,
-        hostType: input.role === "host" ? input.hostType : null,
+        role: "member",
+        hostType: null,
       })
       .returning();
     const safeUser = publicUser(user);
