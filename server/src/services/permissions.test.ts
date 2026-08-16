@@ -11,7 +11,7 @@ const host = {
   name: "Host",
   role: "host" as const,
   eventId: 1,
-  hostType: "bride",
+  roleType: "bride",
 };
 const member = {
   id: 2,
@@ -19,7 +19,7 @@ const member = {
   name: "Member",
   role: "member" as const,
   eventId: 1,
-  hostType: null,
+  roleType: null,
 };
 describe("permission enforcement", () => {
   it("denies member re-delegation and allows hosts", () => {

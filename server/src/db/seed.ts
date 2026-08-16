@@ -17,7 +17,7 @@ async function seedUser(
   name: string,
   email: string,
   role: "host" | "member",
-  hostType: "bride" | null = null,
+  roleType: "bride" | null = null,
   previousEmail?: string,
 ) {
   const [existingUser] = await db
@@ -38,7 +38,7 @@ async function seedUser(
     return (
       await db
         .update(users)
-        .set({ name, email, role, hostType, eventId: event.id })
+        .set({ name, email, role, roleType, eventId: event.id })
         .where(eq(users.id, user.id))
         .returning()
     )[0];
@@ -50,7 +50,7 @@ async function seedUser(
         email,
         passwordHash: hash,
         role,
-        hostType,
+        roleType,
         eventId: event.id,
       })
       .returning()

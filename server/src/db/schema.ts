@@ -9,7 +9,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 export const roleEnum = pgEnum("role", ["member", "host", "admin"]);
-export const hostTypeEnum = pgEnum("host_type", [
+export const roleTypeEnum = pgEnum("role_type", [
   "bride",
   "maid_of_honor",
   "planner",
@@ -44,7 +44,7 @@ export const users = pgTable(
     passwordHash: text("password_hash").notNull(),
     name: text("name").notNull(),
     role: roleEnum("role").notNull(),
-    hostType: hostTypeEnum("host_type"),
+    roleType: roleTypeEnum("role_type"),
     eventId: integer("event_id")
       .notNull()
       .references(() => events.id),

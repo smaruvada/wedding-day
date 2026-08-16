@@ -19,7 +19,7 @@ export async function ensureAdmin() {
     email: "admin",
     passwordHash: await bcrypt.hash("Wedding123!", 12),
     role: "admin",
-    hostType: null,
+    roleType: null,
     eventId: targetEvent.id,
   });
 }

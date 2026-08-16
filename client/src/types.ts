@@ -6,7 +6,7 @@ export interface User {
   email: string;
   role: Role;
   eventId: number;
-  hostType: string | null;
+  roleType: string | null;
 }
 export interface Photo {
   id: number;

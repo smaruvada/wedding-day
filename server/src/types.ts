@@ -5,7 +5,7 @@ export interface AuthUser {
   name: string;
   role: Role;
   eventId: number;
-  hostType: string | null;
+  roleType: string | null;
 }
 declare global {
   namespace Express {

@@ -38,7 +38,7 @@ const publicUser = (user: typeof users.$inferSelect): AuthUser => ({
   name: user.name,
   role: user.role,
   eventId: user.eventId,
-  hostType: user.hostType,
+  roleType: user.roleType,
 });
 const fail = (res: any, error: unknown) =>
   res
@@ -148,7 +148,7 @@ authRouter.post("/register", async (req, res) => {
         passwordHash: hash,
         eventId: targetEvent.id,
         role: "member",
-        hostType: null,
+        roleType: null,
       })
       .returning();
     const safeUser = publicUser(user);
@@ -750,13 +750,13 @@ memberRouter.get("/", async (req, res) =>
   }),
 );
 
-const hostType = z.enum(["bride", "maid_of_honor", "planner", "other"]);
+const roleType = z.enum(["bride", "maid_of_honor", "planner", "other"]);
 const adminUser = (user: typeof users.$inferSelect) => ({
   id: user.id,
   name: user.name,
   email: user.email,
   role: user.role,
-  hostType: user.hostType,
+  roleType: user.roleType,
   eventId: user.eventId,
   createdAt: user.createdAt,
 });
@@ -776,11 +776,9 @@ adminRouter.post("/users", async (req, res) => {
         email: z.string().trim().min(1),
         password,
         role: z.enum(["member", "host"]),
-        hostType: hostType.optional(),
+        roleType: roleType.nullable().optional(),
       })
       .parse(req.body);
-    if (input.role === "host" && !input.hostType)
-      throw new Error("Host type is required for hosts");
     const [user] = await db
       .insert(users)
       .values({
@@ -788,7 +786,7 @@ adminRouter.post("/users", async (req, res) => {
         email: input.email,
         passwordHash: await bcrypt.hash(input.password, 12),
         role: input.role,
-        hostType: input.role === "host" ? input.hostType : null,
+        roleType: input.roleType ?? null,
         eventId: req.user!.eventId,
       })
       .returning();
@@ -805,7 +803,7 @@ adminRouter.patch("/users/:userId", async (req, res) => {
         email: z.string().trim().min(1).optional(),
         password: password.optional(),
         role: z.enum(["member", "host", "admin"]).optional(),
-        hostType: hostType.nullable().optional(),
+        roleType: roleType.nullable().optional(),
       })
       .parse(req.body);
     const [existing] = await db
@@ -815,16 +813,13 @@ adminRouter.patch("/users/:userId", async (req, res) => {
       .limit(1);
     if (!existing) return res.status(404).json({ error: "User not found" });
     const role = input.role ?? existing.role;
-    const selectedHostType = role === "host" ? (input.hostType ?? existing.hostType) : null;
-    if (role === "host" && !selectedHostType)
-      throw new Error("Host type is required for hosts");
     const [user] = await db
       .update(users)
       .set({
         name: input.name ?? existing.name,
         email: input.email ?? existing.email,
         role,
-        hostType: selectedHostType,
+        roleType: input.roleType ?? existing.roleType,
         ...(input.password
           ? { passwordHash: await bcrypt.hash(input.password, 12) }
           : {}),

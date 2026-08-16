@@ -63,7 +63,7 @@ export function ProfilePage() {
             </Group>
           )}
           <div><Text size="sm" c="dimmed">Email or username</Text><Text>{user.email}</Text></div>
-          <div><Text size="sm" c="dimmed">Role</Text><Text tt="capitalize">{user.role}{user.hostType ? ` (${user.hostType.replace(/_/g, " ")})` : ""}</Text></div>
+          <div><Text size="sm" c="dimmed">Role</Text><Text tt="capitalize">{user.role}{user.roleType ? ` (${user.roleType.replace(/_/g, " ")})` : ""}</Text></div>
         </Stack>
       </Card>
       <Card withBorder maw={520} mt="lg">
